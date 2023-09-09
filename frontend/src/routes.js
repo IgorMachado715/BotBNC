@@ -3,18 +3,30 @@ import { Route, BrowserRouter, Redirect } from "react-router-dom";
 import Login from "./public/Login/Login";
 import Settings from "./private/Settings/Settings";
 
-
 //definição de rota e componente renderizado para essa pagina
 //abaixo cria-se rotas para paginas
-function Routes(){
+function Routes() {
+
+    function PrivateRoute({ children, ...rest }) {
+        return (
+            <Route {...rest} render={() => {
+                return localStorage.getItem('token')
+                    ? children
+                    : <Redirect to="/" />
+            }} />
+
+
+        )
+    }
+
     return (
         <BrowserRouter>
             <Route path="/" exact>
-                <Login /> 
+                <Login />
             </Route>
-            <Route path="/settings">
+            <PrivateRoute path="/settings">
                 <Settings />
-            </Route>
+            </PrivateRoute>
         </BrowserRouter>
     )
 }
