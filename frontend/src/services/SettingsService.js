@@ -12,3 +12,11 @@ export async function getSettings(token) {
     return response.data;
 }
 
+export async function updateSettings(settings, token){
+    const settingsUrl = `${API_URL}/settings`;
+    const headers = {
+        'authorization': token 
+    }
+    const response = await axios.patch(settingsUrl, settings, { headers });
+    return response.data;
+}
