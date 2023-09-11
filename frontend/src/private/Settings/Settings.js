@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef } from "react";
 import { useHistory } from 'react-router-dom';
 import { getSettings, updateSettings } from '../../services/SettingsService';
 import Menu from "../../components/menu/Menu";
-
+import Symbols from "./Symbols";
 
 
 function Settings() {
@@ -160,6 +160,7 @@ function Settings() {
                         </div>
                     </div>
                 </div>
+                <Symbols />
             </main>
         </React.Fragment>
     )
