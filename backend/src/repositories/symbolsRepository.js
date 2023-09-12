@@ -39,15 +39,10 @@ async function bulkInsert(symbols){
     return symbolModel.bulkCreate(symbols);
 }
 
-async function syncSymbols(symbols) {
-
-}
-
 module.exports = {
     getSymbols,
     getSymbol,
     updateSymbol,
-    syncSymbols,
     deleteAll,
     bulkInsert
 }
