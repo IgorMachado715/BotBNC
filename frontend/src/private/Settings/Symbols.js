@@ -3,6 +3,7 @@ import { useHistory } from "react-router-dom/cjs/react-router-dom.min";
 import { getSymbols, syncSymbols } from "../../services/SymbolsServices";
 import SymbolRow from "./SymbolRow";
 import SelectQuote, { getDefaultQuote, filterSymbolObjects, setDefaultQuote } from "../../components/menu/SelectQuote/SelectQuote";
+import SymbolModal from "./SymbolModal";
 
 function Symbols() {
 
@@ -12,25 +13,25 @@ function Symbols() {
 
     const [error, setError] = useState('');
 
+    const [editSymbol, setEditSymbol] = useState({
+        symbol: '',
+        basePrecision: 0,
+        quotePrecision: 0,
+        minLotSize: '',
+        minNotional: ''
+    })
+
     const [quote, setQuote] = useState(getDefaultQuote());
 
     const [success, setSuccess] = useState('');
 
     const [isSyincing, setIsSyincing] = useState(false);
 
-    useEffect(() => {
-        const token = localStorage.getItem('token');
-        getSymbols(token)
-            .then(symbols => {
-                setSymbols(filterSymbolObjects(symbols, quote));
-            })
-            .catch(err => {
-                if (err.response && err.response.status === 401) return history.push('/');
-                console.error(err.message);
-                setError(err.message);
-                setSuccess('');
-            })
-    }, [isSyincing, quote])
+    function onEditSymbol(event){
+        const symbol = event.target.id.replace('edit', '');
+        const symbolObj = symbols.find(s => s.symbol === symbol);
+        setEditSymbol(symbolObj);
+    }
 
     function onSyncClick(event) {
         const token = localStorage.getItem('token');
@@ -45,9 +46,32 @@ function Symbols() {
             })
     }
 
+    function errorHandling(err){
+        console.error(err.response ? err.response.data : err.message);
+        setError(err.response ? err.response.data : err.message);
+        setSuccess('');
+    }
+
     function onQuoteChange(event) {
         setQuote(event.target.value);
         setDefaultQuote(event.target.value);
+    }
+
+    function loadSymbols(){
+        const token = localStorage.getItem('token');
+        getSymbols(token)
+            .then(symbols => {
+                setSymbols(filterSymbolObjects(symbols, quote));
+            })
+            .catch(err => errorHandling(err))
+    }
+
+    useEffect(() => {
+        loadSymbols();
+    }, [isSyincing, quote])
+
+    function onModalSubmit(event){
+        loadSymbols();
     }
 
     return (<React.Fragment>
@@ -78,7 +102,7 @@ function Symbols() {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {symbols.map(item => <SymbolRow key={item.symbol} data={item} />)}
+                                    {symbols.map(item => <SymbolRow key={item.symbol} data={item} onClick={onEditSymbol} />)}
                                 </tbody>
                                 <tfoot>
                                     <tr>
@@ -108,7 +132,7 @@ function Symbols() {
                 </div>
             </div>
         </div>
-
+        <SymbolModal data={editSymbol} onSubmit={onModalSubmit}/>
     </React.Fragment>);
 }
 
