@@ -28,9 +28,9 @@ function Symbols() {
     const [isSyincing, setIsSyincing] = useState(false);
 
     function onEditSymbol(event){
-        const symbol = event.target.id.replace('edit', '');
-        const symbolObj = symbols.find(s => s.symbol === symbol);
-        setEditSymbol(symbolObj);
+        const symbolObj = event.target.id.replace("edit", "");
+        const symbol = symbols.find((s) => s.symbol === symbolObj);
+        setEditSymbol(symbol);
     }
 
     function onSyncClick(event) {
@@ -102,7 +102,7 @@ function Symbols() {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {symbols.map(item => <SymbolRow key={item.symbol} data={item} onClick={onEditSymbol} />)}
+                                    {symbols.map((item) => <SymbolRow key={item.symbol} data={item} onClick={onEditSymbol} />)}
                                 </tbody>
                                 <tfoot>
                                     <tr>

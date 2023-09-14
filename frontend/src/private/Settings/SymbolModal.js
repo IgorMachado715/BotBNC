@@ -27,7 +27,14 @@ function SymbolModal(props) {
     }
 
     function onFavoriteClick(event) {
-        setSymbol(prevState => ({ ...prevState, isFavorite: !symbol.isFavorite }));
+        symbol.isFavorite = !symbol.isFavorite;
+        const token = localStorage.getItem("token");
+        updateSymbol(symbol, token)
+            .then((result) => {
+                setError("");
+                setSymbol({ ...symbol });
+            })
+            .catch((err) => setError(err.response ? err.response.data : err.message));
     }
 
     function onSubmit(event) {
@@ -103,10 +110,10 @@ function SymbolModal(props) {
                     </form>
                     <div className="modal-footer">
                         {
-                            error
-                                ? <div className="alert alert-danger">{error}</div>
-                                : <React.Fragment></React.Fragment>
-                        }
+                            error 
+                                ? ( <div className="alert alert-danger">{error}</div>)
+                                : (<React.Fragment></React.Fragment>
+                        )}
                         <button type="submit" className="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#modalSymbol">
                             Salvar
                         </button>
