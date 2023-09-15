@@ -13,10 +13,22 @@ module.exports = (settings, wss) => {
         if (!wss || !wss.clients) return;
         wss.clients.forEach(client => {
             if (client.readyState === WebSocket.OPEN) {
-                client.send(JSON.stringify({ miniTicker: markets })); 
+                client.send(JSON.stringify({ miniTicker: markets }));
+            }
+        });
+
+        const books = Object.entries(markets).map(mkt => {
+            return { symbol: mkt[0], bestAsk: mkt[1].close, bestBid: mkt[1].close }
+        })
+    
+        wss.clients.forEach(client => {
+            if (client.readyState === WebSocket.OPEN) {
+                client.send(JSON.stringify({ book: books }));
             }
         });
     })
+
+    
 
     console.log(`Bot consumidor de exchanges está rodando.`);
 }
