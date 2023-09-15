@@ -19,8 +19,14 @@ function SelectQuote(props) {
             <option value="BTC">BTC</option>
             <option value="USD">USD</option>
             <option value="USDT">USDT</option>
+            <option value="ETH">ETH</option>
+            <option value="EUR">EUR</option>
         </select>
     )
+}
+
+export function filterSymbolNames(symbols, quote){
+    return filterSymbolObjects(symbols, quote).map(s => s.symbol);
 }
 
 export function filterSymbolObjects(symbols, quote){
@@ -33,7 +39,7 @@ export function filterSymbolObjects(symbols, quote){
 }
 
 export function getDefaultQuote() {
-    return localStorage.getItem(DEFAULT_QUOTE_PROPERTY) ? localStorage.getItem(DEFAULT_QUOTE_PROPERTY) : "USD";
+    return localStorage.getItem(DEFAULT_QUOTE_PROPERTY) ? localStorage.getItem(DEFAULT_QUOTE_PROPERTY) : "FAVORITES";
 }
 
 export function setDefaultQuote(quote){

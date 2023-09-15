@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import useWebSocket from 'react-use-websocket';
 import Menu from '../../components/menu/Menu';
 import LineChart from './LineChart';
+import MiniTicker from './MiniTicker/MiniTicker';
 
 function Dashboard() {
 
@@ -31,8 +32,8 @@ function Dashboard() {
                     </div>
                 </div>
                 <LineChart />
+                <MiniTicker data={miniTickerState} />
             </main>
-            {JSON.stringify(miniTickerState)}
         </React.Fragment>
     );
 }
