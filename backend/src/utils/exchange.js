@@ -8,9 +8,10 @@ module.exports = (settings) => {
         APISECRET: settings.secretKey,
         family: 0,
         urls:{
-            base: settings.apiUrl.endsWith('/') ? settings.apiUrl : settings.apiUrl + '/'
+            base: settings.apiUrl.endsWith('/') ? settings.apiUrl : settings.apiUrl + '/',
+            stream: settings.streamUrl.endsWith('/') ? settings.streamUrl : settings.streamUrl + '/',
         }
-    });
+    })
 
     function exchangeInfo(){
         return binance.exchangeInfo();

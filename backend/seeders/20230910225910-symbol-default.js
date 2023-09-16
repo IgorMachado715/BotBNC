@@ -3,10 +3,13 @@
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, Sequelize) {
-    const symbol = await queryInterface.rawSelect('symbols', { where: {}, limit: 1 }, ['symbol']);
+
+    const symbolDefault = 'BTCUSD';
+
+    const symbol = await queryInterface.rawSelect('symbols', { where: {symbol: symbolDefault}, limit: 1 }, ['symbol']);
     if (!symbol) {
       return queryInterface.bulkInsert('symbols', [{
-        symbol: 'BTCUSD',
+        symbol: symbolDefault,
         basePrecision: 8,
         quotePrecision: 8,
         minNotional: '0.1',

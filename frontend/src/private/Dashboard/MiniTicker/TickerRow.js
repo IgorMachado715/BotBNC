@@ -52,7 +52,7 @@ function TickerRow(props) {
 
         setData(data);
 
-    }, [props.data])
+    }, [props.data]);
 
     return (tickerRow);
 }
