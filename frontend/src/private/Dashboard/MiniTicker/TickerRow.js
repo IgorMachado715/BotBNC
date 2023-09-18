@@ -13,27 +13,7 @@ function TickerRow(props) {
         open: '0',
         high: '0',
         low: '0'
-    })
-
-    const tickerRow = useMemo(() => (
-        <tr>
-            <td className="text-gray-900">
-                {props.symbol}
-            </td>
-            <td className="text-gray-900">
-                {`${data.close}`.substring(0, 8)}
-            </td>
-            <td className="text-gray-900">
-                {`${data.open}`.substring(0, 8)}
-            </td>
-            <td className="text-gray-900">
-                {`${data.high}`.substring(0, 8)}
-            </td>
-            <td className="text-gray-900">
-                {`${data.low}`.substring(0, 8)}
-            </td>
-        </tr>
-    ), [data.close, data.open, data.high, data.low])
+    });
 
     useEffect(() => {
         if (!props.data) return;
@@ -53,6 +33,26 @@ function TickerRow(props) {
         setData(data);
 
     }, [props.data]);
+
+    const tickerRow = useMemo(() => (
+        <tr>
+            <td className="text-gray-900">
+                {props.symbol}
+            </td>
+            <td className="text-gray-900">
+                {`${data.close}`.substring(0, 8)}
+            </td>
+            <td className="text-gray-900">
+                {`${data.open}`.substring(0, 8)}
+            </td>
+            <td className="text-gray-900">
+                {`${data.high}`.substring(0, 8)}
+            </td>
+            <td className="text-gray-900">
+                {`${data.low}`.substring(0, 8)}
+            </td>
+        </tr>
+    ), [data.close, data.open, data.high, data.low]);
 
     return (tickerRow);
 }

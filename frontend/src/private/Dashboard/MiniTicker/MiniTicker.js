@@ -25,8 +25,8 @@ function MiniTicker(props) {
             .catch(err => {
                 if(err.response && err.response.status === 401) return history.push('/');
                 console.error(err);
-            })
-    }, [quote])
+            });
+    }, [quote]);
 
     function onQuoteChange(event) {
         setQuote(event.target.value);

@@ -9,8 +9,8 @@ import React, { useEffect, useState, useMemo } from "react";
 function BookRow(props) {
 
     const [data, setData] = useState({
-        bid: '0',
-        ask: '0',
+        bid: "0",
+        ask: "0",
     });
 
     const bookRow = useMemo(() => (
@@ -19,7 +19,7 @@ function BookRow(props) {
             <td className="text-gray-900">{`${data.bid}`.substring(0, 8)}</td>
             <td className="text-gray-900">{`${data.ask}`.substring(0, 8)}</td>
         </tr>
-    ), [data.bid, data.ask])
+    ), [data.bid, data.ask]);
 
     useEffect(() => {
         if (!props.data) return;

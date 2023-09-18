@@ -18,6 +18,7 @@ function SelectQuote(props) {
             <option value="BRL">BRL</option>
             <option value="BTC">BTC</option>
             <option value="USD">USD</option>
+            <option value="BUSD">BUSD</option>
             <option value="USDT">USDT</option>
             <option value="ETH">ETH</option>
             <option value="EUR">EUR</option>

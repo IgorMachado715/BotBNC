@@ -4,7 +4,7 @@
 module.exports = {
   async up(queryInterface, Sequelize) {
 
-    const symbolDefault = 'BTCUSD';
+    const symbolDefault = 'BTCBUSD';
 
     const symbol = await queryInterface.rawSelect('symbols', { where: {symbol: symbolDefault}, limit: 1 }, ['symbol']);
     if (!symbol) {

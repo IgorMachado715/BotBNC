@@ -4,6 +4,10 @@ import Menu from '../../components/menu/Menu';
 import LineChart from './LineChart';
 import MiniTicker from './MiniTicker/MiniTicker';
 import BookTicker from './BookTicker/BookTicker';
+import Wallet from './Wallet/Wallet';
+import CandleChart from './CandleChart';
+import NewOrderButton from '../../components/menu/NewOrder/NewOrderButton';
+import NewOrderModal from '../../components/menu/NewOrder/NewOrderModal';
 
 function Dashboard() {
 
@@ -11,23 +15,36 @@ function Dashboard() {
 
     const [bookState, setBookState] = useState({});
 
+    const [balanceState, setBalanceState] = useState({});
+
+    const [notification, setNotification] = useState({ type: "", text: "" });
+
     const { lastJsonMessage } = useWebSocket(process.env.REACT_APP_WS_URL, {
-        onOpen: () => console.log(`Connected to App WS`),
+        onOpen: () => {console.log(`Connected to App WS`);},
         onMessage: () => {
             if (lastJsonMessage) {
-                if (lastJsonMessage.miniTicker) setTickerState(lastJsonMessage.miniTicker);
-                if (lastJsonMessage.book) {
-                    lastJsonMessage.book.forEach(b => bookState[b.symbol] = b);
+                if (lastJsonMessage.miniTicker) 
+                setTickerState(lastJsonMessage.miniTicker);
+                else if (lastJsonMessage.balance) 
+                setBalanceState(lastJsonMessage.balance);
+                else if (lastJsonMessage.book) {
+                    lastJsonMessage.book.forEach((b) => (bookState[b.symbol] = b));
                     setBookState(bookState);
+
                 }
+                
             }
         },
-        queryParams: {},
-        onError: (err) => console.error(err),
-        shouldReconnect: (closeEvent) => true,
-        reconnectInterval: 3000,
+        queryParams: { token: localStorage.getItem("token") },
+    onError: (event) => {
+      console.error(event);
+      setNotification({ type: "error", text: event });
+    },
+    shouldReconnect: (closeEvent) => true,
+    reconnectInterval: 3000,
 
-    })
+    });
+
     return (
         <React.Fragment>
             <Menu />
@@ -36,13 +53,18 @@ function Dashboard() {
                     <div className="d-block mb-4 mb-md-0">
                         <h1 className="h4">Dashboard</h1>
                     </div>
+                    <div className="mb-4">
+                       <NewOrderButton />
+                    </div>
                 </div>
-                <LineChart />
+                <CandleChart symbol="BTCUSD" />
                 <MiniTicker data={miniTickerState} />
                 <div className="row">
                     <BookTicker data={bookState} />
+                    <Wallet data={balanceState} />
                 </div>
             </main>
+            <NewOrderModal />
         </React.Fragment>
     );
 }
