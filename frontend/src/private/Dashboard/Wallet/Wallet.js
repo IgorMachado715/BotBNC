@@ -6,6 +6,7 @@ import '../Dashboard.css';
 /**
  * props:
  * - data
+ * - onUpdate
  */
 
 function Wallet(props) {
@@ -14,7 +15,7 @@ function Wallet(props) {
 
     const [balances, setBalances] = useState([]);
 
-    useEffect(() => {
+    function getBalanceCall(){
         const token = localStorage.getItem('token');
         getBalance(token)
             .then(info => {
@@ -25,15 +26,27 @@ function Wallet(props) {
                         available: item[1].available,
                         onOrder: item[1].onOrder
                     }
-                })
+                });
 
+                if(props.onUpdate) props.onUpdate(balances);
                 setBalances(balances);
             })
             .catch(err => {
                 if(err.response && err.response.status === 401) return history.push('/');
                 console.error(err);
             })
-    }, [props.data])
+    }
+
+    
+
+    useEffect(() =>{
+        getBalanceCall();
+        const intervalId = setInterval(() => {
+            getBalanceCall();
+        }, 60000);
+
+        return () => clearInterval(intervalId);
+    }, [props.data]);
 
     //if(!props || !props.data) return <React.Fragment></React.Fragment>
 

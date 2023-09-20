@@ -69,7 +69,7 @@ function MiniTicker(props) {
                 </div>
             </div>
         </div>
-    )
+    );
 }
 
 export default MiniTicker;

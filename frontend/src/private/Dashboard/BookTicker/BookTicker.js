@@ -34,7 +34,7 @@ function BookTicker(props) {
         setQuote(event.target.value);
     }
 
-    if (!props || !props.data) return (<React.Fragment></React.Fragment>);
+    //if (!props || !props.data) return (<React.Fragment></React.Fragment>);
 
     return (
         <React.Fragment>
