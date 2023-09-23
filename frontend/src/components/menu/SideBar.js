@@ -40,7 +40,7 @@ function Sidebar() {
                     <li className="nav-item">
                         <Link to="/dashboard" className="nav-link d-flex align-items-center">
                             <span className="sidebar-icon">
-                                <img src="../img/brand/light.svg" height="20" width="20" alt="Volt Logo" />
+                                <img src="../img/favicon/favicon-32x32.png" height="32" width="32" alt="Beholder Logo" />
                             </span>
                             <span className="mt-1 ms-1 sidebar-text">TraderBot Menu</span>
                         </Link>

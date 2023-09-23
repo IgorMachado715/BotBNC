@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useHistory } from "react-router-dom/cjs/react-router-dom";
 import { getSymbols } from "../../../services/SymbolsServices";
+import SelectQuote, {getDefaultQuote} from "../SelectQuote/SelectQuote";
 
 /**
  * props:
@@ -12,6 +13,7 @@ import { getSymbols } from "../../../services/SymbolsServices";
 
 function SelectSymbol(props) {
 
+    const [quote, setQuote] = useState(false);
     const history = useHistory();
 
     const [symbols, setSymbols] = useState(["CARREGANDO"]);
@@ -35,6 +37,7 @@ function SelectSymbol(props) {
 
                 if (symbolNames.length) {
                     setSymbols(symbolNames);
+                    selectRef.current.value = symbolNames[0];
                     props.onChange({ target: { id: 'symbol', value: symbolNames[0] } });
                 }
                 else setSymbols(["SEM SIMBOLOS"]);

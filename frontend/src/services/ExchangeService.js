@@ -12,3 +12,4 @@ export async function getBalance(token) {
     return response.data;
 }
 
+export const STOP_TYPES = ["STOP_LOSS", "STOP_LOSS_LIMIT", "TAKE_PROFIT", "TAKE_PROFIT_LIMIT"];
