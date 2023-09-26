@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useHistory } from 'react-router-dom/cjs/react-router-dom';
 import useWebSocket from 'react-use-websocket';
 import Menu from '../../components/menu/Menu';
 import LineChart from './LineChart';
@@ -10,6 +11,8 @@ import NewOrderButton from '../../components/menu/NewOrder/NewOrderButton';
 import NewOrderModal from '../../components/menu/NewOrder/NewOrderModal';
 
 function Dashboard() {
+
+    const history = useHistory();
 
     const [miniTickerState, setTickerState] = useState({});
 
@@ -23,6 +26,10 @@ function Dashboard() {
 
     function onWalletUpdate(walletObj){
         setWallet(walletObj);
+    }
+
+    function onOrderSubmit(order){
+        history.push('/orders/' + order.symbol);
     }
 
     const { lastJsonMessage } = useWebSocket(process.env.REACT_APP_WS_URL, {
@@ -70,7 +77,7 @@ function Dashboard() {
                     <Wallet data={balanceState} onUpdate={onWalletUpdate} />
                 </div>
             </main>
-            <NewOrderModal wallet={wallet}  />
+            <NewOrderModal wallet={wallet} onSubmit={onOrderSubmit} />
         </React.Fragment>
     );
 }

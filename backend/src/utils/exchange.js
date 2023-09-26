@@ -22,6 +22,24 @@ module.exports = (settings) => {
         return binance.exchangeInfo();
     }
 
+    function buy(symbol, quantity, price, options){
+        if(price)
+            return binance.buy(symbol, quantity, price, options);
+
+        return binance.marketBuy(symbol, quantity);
+    }
+
+    function sell(symbol, quantity, price, options){
+        if(price)
+            return binance.sell(symbol, quantity, price, options);
+
+        return binance.marketSell(symbol, quantity);
+    }
+
+    function cancel(symbol, orderId){
+        return binance.cancel(symbol, orderId);
+    }
+
     function miniTickerStream(callback) {
         binance.websockets.miniTicker(markets => callback(markets));
     }
@@ -44,6 +62,9 @@ module.exports = (settings) => {
         miniTickerStream,
         bookStream,
         userDataStream,
-        balance
+        balance,
+        buy,
+        sell,
+        cancel
     }
 }

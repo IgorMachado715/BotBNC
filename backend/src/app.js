@@ -29,6 +29,9 @@ app.use('/symbols', authMiddleware, symbolsRouter);
 const exchangeRouter = require('./routers/exchangeRouter');
 app.use('/exchange', authMiddleware, exchangeRouter);
 
+const ordersRouter = require('./routers/ordersRouter');
+app.use('/orders', authMiddleware, ordersRouter);
+
 app.post('/logout', authController.doLogout);
 
 app.use(require('./middlewares/errorMiddleware'));
