@@ -2,7 +2,9 @@ const ordersRepository = require('../repositories/ordersRepository');
 
 const settingsRepository = require('../repositories/settingsRepository');
 
-async function getOrders(req, res, next){
+//ORDERS
+
+async function getOrders(req, res, next) {
     const symbol = req.params.symbol && req.params.symbol.toUpperCase();
 
     //https://localhost:3001/orders/BTCUSDT?page=2
@@ -12,7 +14,7 @@ async function getOrders(req, res, next){
     res.json(orders);
 }
 
-async function placeOrder(req, res, next){
+async function placeOrder(req, res, next) {
     const id = res.locals.token.id;
     const settings = await settingsRepository.getSettingsDecrypted(id);
     const exchange = require('../utils/exchange')(settings);
@@ -21,13 +23,13 @@ async function placeOrder(req, res, next){
 
     let result;
 
-    try{
-    if(side === 'BUY')
-        result = await exchange.buy(symbol, quantity, price, options);
-    else
-        result = await exchange.sell(symbol, quantity, price, options);
-    } 
-    catch (err){
+    try {
+        if (side === 'BUY')
+            result = await exchange.buy(symbol, quantity, price, options);
+        else if (side === 'SELL')
+            result = await exchange.sell(symbol, quantity, price, options);
+    }
+    catch (err) {
         return res.status(400).json(err.body);
     }
     //CHAMADA NA API
@@ -36,7 +38,7 @@ async function placeOrder(req, res, next){
         automationId,
         symbol,
         quantity,
-        type,
+        type: options ? options.type : 'MARKET',
         side,
         limitPrice: price,
         stopPrice: options ? options.stopPrice : null,
@@ -44,18 +46,35 @@ async function placeOrder(req, res, next){
         orderId: result.orderId,
         clientOrderId: result.clientOrderId,
         transactTime: result.transactTime,
+        status: result.status || 'NEW',
+    });
+
+    res.status(201).json(order.get({ plain: true }));
+}
+
+async function cancelOrder(req, res, next) {const id = res.locals.token.id;
+    const settings = await settingsRepository.getSettingsDecrypted(id);
+    const exchange = require('../utils/exchange')(settings);
+
+
+    const {symbol, orderId} = req.params;
+
+    try {
+            result = await exchange.cancel(symbol, orderId);
+    }
+    catch (err) {
+        return res.status(400).json(err.body);
+    }
+
+    const order = await ordersRepository.updateOrderByOrderId(result.orderId, result.origclientOrderId, {
         status: result.status
     });
 
-    res.status(201).json(order.get({plain:true}));
+    res.json(order.get({plain: true}));
 }
 
-async function cancelOrder(req, res, next){
-    res.sendStatus(200);
-}
-
- module.exports = {
+module.exports = {
     getOrders,
     placeOrder,
     cancelOrder
- }
+}
