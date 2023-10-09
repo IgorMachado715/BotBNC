@@ -3,6 +3,7 @@ import { Route, BrowserRouter, Redirect } from "react-router-dom";
 import Login from "./public/Login/Login";
 import Settings from "./private/Settings/Settings";
 import Dashboard from "./private/Dashboard/Dashboard";
+import Orders from "./private/Orders/Orders";
 
 //definição de rota e componente renderizado para essa pagina
 //abaixo cria-se rotas para paginas
@@ -30,6 +31,9 @@ function Routes() {
             </PrivateRoute>
             <PrivateRoute path="/dashboard">
                 <Dashboard />
+            </PrivateRoute>
+            <PrivateRoute path="/orders">
+                <Orders />
             </PrivateRoute>
         </BrowserRouter>
     )
