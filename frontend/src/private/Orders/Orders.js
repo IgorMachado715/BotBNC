@@ -3,31 +3,60 @@ import Menu from '../../components/menu/Menu';
 import NewOrderButton from '../../components/menu/NewOrder/NewOrderButton';
 import NewOrderModal from '../../components/menu/NewOrder/NewOrderModal';
 import { getBalance } from '../../services/ExchangeService';
-import { useHistory } from 'react-router-dom/cjs/react-router-dom.min';
+import { useHistory, useLocation } from 'react-router-dom/cjs/react-router-dom.min';
+import { getOrders } from '../../services/OrdersService';
+import OrderRow from './OrderRow';
 
 function Orders() {
 
+    function useQuery(){
+        return new URLSearchParams(useLocation().search);
+    }
+
+    const query = useQuery();
+
     const history = useHistory();
 
-    const [balances, setBalances] = useState([]);
+    const [balances, setBalances] = useState({});
+    const [orders, setOrders] = useState([]);
+    const [count, setCount] = useState(0);
+    const [page, setPage] = useState(parseInt(query.get('page')));
+
+    function errorProcedure(err){
+        if (err.response && err.response.status === 401) return history.push('/');
+            console.error(err);
+    }
+
+    function getBalanceCall(token){
+        getBalance(token)
+        .then(info => {
+            const balances = Object.entries(info).map(item => {
+                return {
+                    symbol: item[0],
+                    available: item[1].available,
+                    onOrder: item[1].onOrder
+                }
+            })
+            setBalances(balances);
+        })
+        .catch(err => 
+            errorProcedure(err))
+    }
+
+    function getOrdersCall(token){
+        getOrders('', page || 1, token)
+            .then(result => {
+                setOrders(result.rows);
+                setCount(result.count);
+            })
+            .catch(err => 
+                errorProcedure(err))
+    }
 
     useEffect(() => {
         const token = localStorage.getItem('token');
-        getBalance(token)
-            .then(info => {
-                const balances = Object.entries(info).map(item => {
-                    return {
-                        symbol: item[0],
-                        available: item[1].available,
-                        onOrder: item[1].onOrder
-                    }
-                })
-                setBalances(balances);
-            })
-            .catch(err => {
-                if (err.response && err.response.status === 401) return history.push('/');
-                console.error(err);
-            })
+        getBalanceCall(token);
+        getOrdersCall(token);
     }, []);
 
     function onOrderSubmit(order){
@@ -63,7 +92,10 @@ function Orders() {
                         </thead>
                         <tbody>
                             {
-
+                                orders ? orders.map(order => (
+                                    <OrderRow key={order.clientOrderId} data={order} />
+                                ))
+                                : <React.Fragment></React.Fragment>
                             }
                         </tbody>
                     </table>
