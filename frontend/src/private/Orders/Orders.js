@@ -6,21 +6,29 @@ import { getBalance } from '../../services/ExchangeService';
 import { useHistory, useLocation } from 'react-router-dom/cjs/react-router-dom.min';
 import { getOrders } from '../../services/OrdersService';
 import OrderRow from './OrderRow';
+import OrdersPagination from './OrdersPagination';
+import { useParams } from 'react-router-dom/cjs/react-router-dom';
+import SearchSymbol from '../../components/SearchSymbol/SearchSymbol';
 
 function Orders() {
 
-    function useQuery(){
-        return new URLSearchParams(useLocation().search);
-    }
+    const { symbol } = useParams();
 
-    const query = useQuery();
+    const [search, setSearch] = useState(symbol || '');
+
+    const defaultLocation = useLocation();
+
+    function getPage(location){
+        if(!location) location = defaultLocation;
+        return new URLSearchParams(location.search).get('page');
+    }
 
     const history = useHistory();
 
     const [balances, setBalances] = useState({});
     const [orders, setOrders] = useState([]);
     const [count, setCount] = useState(0);
-    const [page, setPage] = useState(parseInt(query.get('page')));
+    const [page, setPage] = useState(parseInt(getPage()));
 
     function errorProcedure(err){
         if (err.response && err.response.status === 401) return history.push('/');
@@ -44,7 +52,7 @@ function Orders() {
     }
 
     function getOrdersCall(token){
-        getOrders('', page || 1, token)
+        getOrders(search, page || 1, token)
             .then(result => {
                 setOrders(result.rows);
                 setCount(result.count);
@@ -57,10 +65,20 @@ function Orders() {
         const token = localStorage.getItem('token');
         getBalanceCall(token);
         getOrdersCall(token);
-    }, []);
+    }, [page, search]);
+
+    useEffect(() => {
+        return history.listen(location => {
+            setPage(getPage(location));
+        })
+    }, [history]);
 
     function onOrderSubmit(order){
         history.go(0);
+    }
+
+    function onSearchChange(event){
+        setSearch(event.target.value);
     }
 
     return (
@@ -74,6 +92,9 @@ function Orders() {
                     <div className="btn-toolbar mb-2 mb-md-0">
                         <div className="d-inline-flex align-items-center">
                             <NewOrderButton />
+                        </div>
+                        <div className="btn-group ms-2 ms-lg-3">
+                            <SearchSymbol placeholder={symbol} onChange={onSearchChange}/>
                         </div>
                     </div>
                 </div>
@@ -99,6 +120,7 @@ function Orders() {
                             }
                         </tbody>
                     </table>
+                    <OrdersPagination count={count} />
                 </div>
             </main>
             <NewOrderModal wallet={balances} onSubmit={onOrderSubmit} />
