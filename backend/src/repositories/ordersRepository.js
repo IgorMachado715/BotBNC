@@ -12,7 +12,7 @@ function getOrders(symbol, page = 1) {
     };
 
     if (symbol) {
-        if (symbol.length, 6) 
+        if (symbol.length < 6) 
             options.where = { symbol: { [Sequelize.Op.like]: `%${symbol}%` } };
         else
             options.where = {symbol};

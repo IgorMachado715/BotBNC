@@ -56,7 +56,7 @@ module.exports = (settings, wss) => {
             ordersRepository.updateOrderByOrderId(order.orderId, order.clientOrderId, order)
                 .then(order => order && broadcast({execution: order}))
                 .catch(err => console.error(err))
-        }, 1000)
+        }, 10000)
 
     }
 

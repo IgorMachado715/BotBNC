@@ -24,12 +24,12 @@ async function placeOrder(req, res, next) {
     let result;
 
     try {
-        if (side === 'BUY')
+        if (side === "BUY")
             result = await exchange.buy(symbol, quantity, price, options);
-        else if (side === 'SELL')
+        else if (side === "SELL")
             result = await exchange.sell(symbol, quantity, price, options);
     }
-    catch (err) {
+        catch (err) {
         return res.status(400).json(err.body);
     }
     //CHAMADA NA API
@@ -38,7 +38,7 @@ async function placeOrder(req, res, next) {
         automationId,
         symbol,
         quantity,
-        type: options ? options.type : 'MARKET',
+        type: options ? options.type : "MARKET",
         side,
         limitPrice: price,
         stopPrice: options ? options.stopPrice : null,
@@ -46,7 +46,7 @@ async function placeOrder(req, res, next) {
         orderId: result.orderId,
         clientOrderId: result.clientOrderId,
         transactTime: result.transactTime,
-        status: result.status || 'NEW',
+        status: result.status || "NEW",
     });
 
     res.status(201).json(order.get({ plain: true }));

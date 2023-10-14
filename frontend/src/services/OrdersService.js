@@ -30,8 +30,8 @@ export async function placeOrder(order, token) {
         symbol: order.symbol.toUpperCase(),
         quantity: order.quantity,
         side: order.side.toUpperCase(),
-        type: order.type.toUpperCase(),
-    };
+        type: order.type.toUpperCase()
+    }
 
     if (order.type !== 'MARKET') postOrder.price = order.price;
     else if (order.type === 'ICEBERG') postOrder.options = { icebergQty: order.icebergQty };

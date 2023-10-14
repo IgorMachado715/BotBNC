@@ -33,7 +33,7 @@ function Dashboard() {
     }
 
     const { lastJsonMessage } = useWebSocket(process.env.REACT_APP_WS_URL, {
-        onOpen: () => {console.log(`Connected to App WS`);},
+        onOpen: () => console.log(`Connected to App WS`),
         onMessage: () => {
             if (lastJsonMessage) {
                 if (lastJsonMessage.miniTicker) 
