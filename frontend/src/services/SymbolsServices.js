@@ -1,19 +1,26 @@
 import axios from 'axios';
 
-const API_URL = process.env.REACT_APP_API_URL;
+const SYMBOLS_URL = `${process.env.REACT_APP_API_URL}/symbols/`;
 
 //valida o login efetuado
 export async function getSymbols(token) {
-    const symbolsUrl = `${API_URL}/symbols`;
     const headers = {
         'authorization': token 
     };
-    const response = await axios.get(symbolsUrl, { headers });
+    const response = await axios.get(SYMBOLS_URL, { headers });
+    return response.data;
+}
+
+export async function searchSymbols(search, onlyFavorites, page, token){
+    const headers = {
+        'authorization': token 
+    };
+    const response = await axios.get(`${SYMBOLS_URL}?search=${search}&onlyFavorites=${onlyFavorites}&page=${page}`, { headers });
     return response.data;
 }
 
 export async function getSymbol(symbol, token) {
-    const symbolsUrl = `${API_URL}/symbols/${symbol}`;
+    const symbolsUrl = `${SYMBOLS_URL}${symbol}`;
     const headers = {
         'authorization': token 
     };
@@ -22,7 +29,7 @@ export async function getSymbol(symbol, token) {
 }
 
 export async function updateSymbol(symbol, token){
-    const symbolsUrl = `${API_URL}/symbols/${symbol.symbol}`;
+    const symbolsUrl = `${SYMBOLS_URL}${symbol.symbol}`;
     const headers = {
         'authorization': token 
     };
@@ -31,7 +38,7 @@ export async function updateSymbol(symbol, token){
 }
 
 export async function syncSymbols(token){
-    const symbolsUrl = `${API_URL}/symbols/sync`;
+    const symbolsUrl = `${SYMBOLS_URL}sync`;
     const headers = {
         'authorization': token 
     };

@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useHistory } from "react-router-dom/cjs/react-router-dom";
-import SelectSymbol from "./SelectSymbol";
+import SelectSymbol from "../../SelectSymbol/SelectSymbol";
 import SymbolPrice from "./SymbolPrice";
 import { getSymbol } from "../../../services/SymbolsServices";
 import WalletSummary from "./WalletSummary";
@@ -201,7 +201,7 @@ function NewOrderModal(props) {
                         <div className="form-group">
                             <div className="row">
                                 <div className="col-md-6 mb-3">
-                                    <div className="form-group">
+                                    <div className="form-group mb-4">
                                         <label htmlFor="symbol">Símbolo:</label>
                                         <SelectSymbol onChange={onInputChange} />
                                     </div>

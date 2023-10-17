@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useHistory } from "react-router-dom/cjs/react-router-dom";
-import { getSymbols } from "../../../services/SymbolsServices";
-import SelectQuote, {getDefaultQuote} from "../SelectQuote/SelectQuote";
+import { getSymbols } from "../../services/SymbolsServices";
+import SelectQuote, {getDefaultQuote} from "../menu/SelectQuote/SelectQuote";
 
 /**
  * props:
@@ -60,8 +60,6 @@ function SelectSymbol(props) {
 
     const selectSymbol = useMemo(() => {
         return (
-            <div className="form-group mb-4">
-                <label htmlFor="symbol"></label>
                 <div className="input-group">
                     <button ref={buttonRef} type="button" className="btn btn-secondary d-inline-flex align-items-center" onClick={onFavoriteClick}>
                         <svg className="icon icon-xs" xmlns="http://www.w3.org/2000/svg" fill={getStarFillColor()} viewBox="0 0 26 26" stroke-width="1.5" stroke="orange" onClick={onFavoriteClick}>
@@ -72,7 +70,6 @@ function SelectSymbol(props) {
                         {symbols.map(s => (<option key={s} value={s}>{s}</option>))}
                     </select>
                 </div>
-            </div>
         )
     }, [symbols]);
     return (

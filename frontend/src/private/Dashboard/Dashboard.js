@@ -9,6 +9,7 @@ import Wallet from './Wallet/Wallet';
 import CandleChart from './CandleChart';
 import NewOrderButton from '../../components/menu/NewOrder/NewOrderButton';
 import NewOrderModal from '../../components/menu/NewOrder/NewOrderModal';
+import SelectSymbol from '../../components/SelectSymbol/SelectSymbol';
 
 function Dashboard() {
 
@@ -22,13 +23,15 @@ function Dashboard() {
 
     const [wallet, setWallet] = useState({});
 
+    const [chartSymbol, setChartSymbol] = useState("BTCUSDT");
+
     const [notification, setNotification] = useState({ type: "", text: "" });
 
-    function onWalletUpdate(walletObj){
+    function onWalletUpdate(walletObj) {
         setWallet(walletObj);
     }
 
-    function onOrderSubmit(order){
+    function onOrderSubmit(order) {
         history.push('/orders/' + order.symbol);
     }
 
@@ -36,27 +39,31 @@ function Dashboard() {
         onOpen: () => console.log(`Connected to App WS`),
         onMessage: () => {
             if (lastJsonMessage) {
-                if (lastJsonMessage.miniTicker) 
-                setTickerState(lastJsonMessage.miniTicker);
-                else if (lastJsonMessage.balance) 
-                setBalanceState(lastJsonMessage.balance);
+                if (lastJsonMessage.miniTicker)
+                    setTickerState(lastJsonMessage.miniTicker);
+                else if (lastJsonMessage.balance)
+                    setBalanceState(lastJsonMessage.balance);
                 else if (lastJsonMessage.book) {
                     lastJsonMessage.book.forEach((b) => (bookState[b.symbol] = b));
                     setBookState(bookState);
 
                 }
-                
+
             }
         },
         queryParams: { token: localStorage.getItem("token") },
-    onError: (event) => {
-      console.error(event);
-      setNotification({ type: "error", text: event });
-    },
-    shouldReconnect: (closeEvent) => true,
-    reconnectInterval: 3000,
+        onError: (event) => {
+            console.error(event);
+            setNotification({ type: "error", text: event });
+        },
+        shouldReconnect: (closeEvent) => true,
+        reconnectInterval: 3000,
 
     });
+
+    function onSymbolChange(event){
+        setChartSymbol(event.target.value);
+    }
 
     return (
         <React.Fragment>
@@ -66,11 +73,16 @@ function Dashboard() {
                     <div className="d-block mb-4 mb-md-0">
                         <h1 className="h4">Dashboard</h1>
                     </div>
-                    <div className="mb-4">
-                       <NewOrderButton />
+                    <div className="btn-toolbar mb-md-0">
+                        <div className="d-inline-flex align-items-center">
+                            <SelectSymbol onChange={onSymbolChange} />
+                        </div>
+                        <div className="ms-2 ms-lg-3">
+                            <NewOrderButton />
+                        </div>
                     </div>
                 </div>
-                <CandleChart symbol="BTCUSD" />
+                <CandleChart symbol={chartSymbol} />
                 <MiniTicker data={miniTickerState} />
                 <div className="row">
                     <BookTicker data={bookState} />

@@ -6,15 +6,17 @@ import { getBalance } from '../../services/ExchangeService';
 import { useHistory, useLocation } from 'react-router-dom/cjs/react-router-dom.min';
 import { getOrders } from '../../services/OrdersService';
 import OrderRow from './OrderRow';
-import OrdersPagination from './OrdersPagination';
+import Pagination from '../../components/Pagination/Pagination';
 import { useParams } from 'react-router-dom/cjs/react-router-dom';
 import SearchSymbol from '../../components/SearchSymbol/SearchSymbol';
+import ViewOrderModal from './ViewOrderModal';
 
 function Orders() {
 
     const { symbol } = useParams();
 
     const [search, setSearch] = useState(symbol || '');
+    const [viewOrder, setViewOrder] = useState({});
 
     const defaultLocation = useLocation();
 
@@ -81,6 +83,11 @@ function Orders() {
         setSearch(event.target.value);
     }
 
+    function onViewClick(event){
+        const id = parseInt(event.target.id.replace("view", ""));
+        setViewOrder(orders.find(o => o.id === id));
+    }
+
     return (
         <React.Fragment>
             <Menu />
@@ -114,15 +121,16 @@ function Orders() {
                         <tbody>
                             {
                                 orders ? orders.map(order => (
-                                    <OrderRow key={order.clientOrderId} data={order} />
+                                    <OrderRow key={order.clientOrderId} data={order} onClick={onViewClick}/>
                                 ))
                                 : <React.Fragment></React.Fragment>
                             }
                         </tbody>
                     </table>
-                    <OrdersPagination count={count} />
+                    <Pagination count={count} />
                 </div>
             </main>
+            <ViewOrderModal data={viewOrder} />
             <NewOrderModal wallet={balances} onSubmit={onOrderSubmit} />
         </React.Fragment>
     )

@@ -1,9 +1,15 @@
 const symbolsRepository = require('../repositories/symbolsRepository');
-const crypto = require('../utils/crypto');
 
 async function getSymbols(req, res, next) {
-    const symbols = await symbolsRepository.getSymbols();
-    res.json(symbols);
+    const {search, page,  onlyFavorites} = req.query;
+
+    let result;
+    if (search || page || onlyFavorites)
+        result = await symbolsRepository.searchSymbols(search, onlyFavorites === 'true', page);
+    else
+        result = await symbolsRepository.getSymbols();
+
+    res.json(result);
 }
 
 async function updateSymbol(req, res, next) {
