@@ -63,10 +63,12 @@ module.exports = (settings, wss) => {
     exchange.userDataStream((balanceData) => {
         broadcast({ balance: balanceData });
     },
-        executionData =>processExecutionData(executionData) 
+        executionData => processExecutionData(executionData) 
     )
 
+    exchange.chartStream('BTCBUSD', "1m", (ohlc) => {
 
+    })
 
     console.log(`Bot consumidor de exchanges está rodando.`);
 }

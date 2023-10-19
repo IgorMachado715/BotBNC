@@ -24,6 +24,12 @@ export async function cancelOrder(symbol, orderId, token) {
     return response.data;
 }
 
+export async function syncOrder(botOrderId, token) {
+    const headers = { 'authorization': token }
+    const response = await axios.post(`${ORDERS_URL}${botOrderId}/sync`, null, { headers });
+    return response.data;
+}
+
 export async function placeOrder(order, token) {
 
     const postOrder = {

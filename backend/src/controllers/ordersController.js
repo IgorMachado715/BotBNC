@@ -1,3 +1,4 @@
+const { or } = require('sequelize');
 const ordersRepository = require('../repositories/ordersRepository');
 
 const settingsRepository = require('../repositories/settingsRepository');
@@ -29,7 +30,7 @@ async function placeOrder(req, res, next) {
         else if (side === "SELL")
             result = await exchange.sell(symbol, quantity, price, options);
     }
-        catch (err) {
+    catch (err) {
         return res.status(400).json(err.body);
     }
     //CHAMADA NA API
@@ -52,15 +53,16 @@ async function placeOrder(req, res, next) {
     res.status(201).json(order.get({ plain: true }));
 }
 
-async function cancelOrder(req, res, next) {const id = res.locals.token.id;
+async function cancelOrder(req, res, next) {
+    const id = res.locals.token.id;
     const settings = await settingsRepository.getSettingsDecrypted(id);
     const exchange = require('../utils/exchange')(settings);
 
 
-    const {symbol, orderId} = req.params;
+    const { symbol, orderId } = req.params;
 
     try {
-            result = await exchange.cancel(symbol, orderId);
+        result = await exchange.cancel(symbol, orderId);
     }
     catch (err) {
         return res.status(400).json(err.body);
@@ -70,11 +72,55 @@ async function cancelOrder(req, res, next) {const id = res.locals.token.id;
         status: result.status
     });
 
-    res.json(order.get({plain: true}));
+    res.json(order.get({ plain: true }));
+}
+
+async function syncOrder(req, res, next) {
+    const id = res.locals.token.id;
+    const settings = await settingsRepository.getSettingsDecrypted(id);
+    const exchange = require('../utils/exchange')(settings);
+
+    const botOrderId = req.params.id;
+    const order = await ordersRepository.getOrderById(botOrderId);
+    if (!order) return res.sendStatus(404);
+
+    //chamar binance apis
+    let binanceOrder, binanceTrade;
+    try {
+        binanceOrder = await exchange.orderStatus(order.symbol, order.orderId);
+        order.status = binanceOrder.status;
+        order.transactTime = binanceOrder.updateTime;
+
+        if (binanceOrder.status !== "FILLED") {
+            await order.save();
+            return res.json(order);
+        }
+        binanceTrade = await exchange.orderTrade(order.symbol, order.orderId);
+    }
+    catch (err) {
+        console.error(err);
+        return res.sendStatus(404);
+    }
+
+    const quoteQuantity = parseFloat(binanceOrder.cummulativeQuoteQty);
+    order.avgPrice = quoteQuantity / parseFloat(binanceOrder.executedQty);
+    order.isMaker = binanceTrade.isMaker;
+    order.commission = binanceTrade.commission;
+    order.quantity = binanceOrder.executedQty;
+
+    const isQuoteComission = binanceTrade.commissionAsset && order.symbol.endsWith(binanceTrade.commissionAsset);
+    if (isQuoteComission)
+        order.net = quoteQuantity - parseFloat(binanceTrade.commission);
+    else order.net = quoteQuantity;
+
+    await order.save();
+
+    res.json(order);
 }
 
 module.exports = {
     getOrders,
     placeOrder,
-    cancelOrder
+    cancelOrder,
+    syncOrder
 }

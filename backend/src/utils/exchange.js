@@ -1,4 +1,5 @@
 const Binance = require('node-binance-api');
+const { or } = require('sequelize');
 
 module.exports = (settings) => {
     if (!settings) throw new Error('The settings object is required to connect on exchange.');
@@ -40,6 +41,15 @@ module.exports = (settings) => {
         return binance.cancel(symbol, orderId);
     }
 
+    function orderStatus(symbol, orderId){
+        return binance.orderStatus(symbol, orderId);
+    }
+
+    async function orderTrade(symbol, orderId){
+        const trades = await binance.trades(symbol);
+        return trades.find((t) => t.orderId === orderId);
+    }
+
     function miniTickerStream(callback) {
         binance.websockets.miniTicker(markets => callback(markets));
     }
@@ -52,9 +62,18 @@ module.exports = (settings) => {
         binance.websockets.userData(
             balance => balanceCallback(balance),
             executionData => executionCallback(executionData),
-            subscribedData => console.log(`userDataStream:subscribed ${subscribedData}`),
+            subscribedData => console.log(`userDataStream:subscribed: ${subscribedData}`),
             listStatusData => listStatusCallback(listStatusData)
         );
+    }
+
+    async function chartStream(symbol, interval, callback){
+        binance.websockets.chart(symbol, interval, (symbol, interval, chart) => {
+            //console.log(chart);
+            const ohlc = binance.ohlc(chart);
+            //console.log(ohlc);
+            callback(ohlc);
+        })
     }
 
     return {
@@ -62,9 +81,12 @@ module.exports = (settings) => {
         miniTickerStream,
         bookStream,
         userDataStream,
+        chartStream,
         balance,
         buy,
         sell,
-        cancel
+        cancel,
+        orderStatus,
+        orderTrade
     }
 }
