@@ -68,6 +68,7 @@ module.exports = (settings) => {
     }
 
     async function chartStream(symbol, interval, callback){
+        const binance = new Binance().options({ family: 0 });
         binance.websockets.chart(symbol, interval, (symbol, interval, chart) => {
             //console.log(chart);
             const ohlc = binance.ohlc(chart);

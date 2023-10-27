@@ -1,6 +1,7 @@
 const WebSocket = require('ws');
 const crypto = require('./utils/crypto');
 const ordersRepository = require('./repositories/ordersRepository');
+const technicalindicators = require('technicalindicators');
 
 module.exports = (settings, wss) => {
 
@@ -66,9 +67,22 @@ module.exports = (settings, wss) => {
         executionData => processExecutionData(executionData) 
     )
 
-    exchange.chartStream('BTCBUSD', "1m", (ohlc) => {
+    function calcRSI(closes){
+        const rsiResult = technicalindicators.rsi({
+            period: 14,
+            values: closes
+        })
+        return parseFloat(rsiResult[rsiResult.length - 1]);
+    }
 
-    })
+    function processChartData(closes, callback){
+        const rsi = calcRSI(closes);
+        console.log(rsi);
+    }
+
+    exchange.chartStream('BTCBUSD', "1m", (ohlc) => processChartData(ohlc.close, (msg) => {
+        console.log(msg);
+    }))
 
     console.log(`Bot consumidor de exchanges está rodando.`);
 }

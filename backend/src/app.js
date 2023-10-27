@@ -32,6 +32,9 @@ app.use('/exchange', authMiddleware, exchangeRouter);
 const ordersRouter = require('./routers/ordersRouter');
 app.use('/orders', authMiddleware, ordersRouter);
 
+const monitorsRouter = require('./routers/monitorsRouter');
+app.use('/monitors', authMiddleware, monitorsRouter);
+
 app.post('/logout', authController.doLogout);
 
 app.use(require('./middlewares/errorMiddleware'));

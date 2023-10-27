@@ -83,7 +83,9 @@ function Dashboard() {
                     </div>
                 </div>
                 <CandleChart symbol={chartSymbol} />
+                <div className="row">
                 <MiniTicker data={miniTickerState} />
+                </div>
                 <div className="row">
                     <BookTicker data={bookState} />
                     <Wallet data={balanceState} onUpdate={onWalletUpdate} />
