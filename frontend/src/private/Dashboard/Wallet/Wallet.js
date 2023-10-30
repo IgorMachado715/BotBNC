@@ -38,14 +38,20 @@ function Wallet(props) {
     }
 
     
-
-    useEffect(() =>{
+    /* useEffect(() =>{
         getBalanceCall();
         const intervalId = setInterval(() => {
             getBalanceCall();
         }, 60000);
 
         return () => clearInterval(intervalId);
+    }, [props.data]); */
+
+    useEffect(() =>{
+        if(props.data && Object.entries(props.data).length)
+            setBalances(props.data)
+        else
+            getBalanceCall();
     }, [props.data]);
 
     //if(!props || !props.data) return <React.Fragment></React.Fragment>

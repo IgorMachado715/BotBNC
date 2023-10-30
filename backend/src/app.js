@@ -35,6 +35,9 @@ app.use('/orders', authMiddleware, ordersRouter);
 const monitorsRouter = require('./routers/monitorsRouter');
 app.use('/monitors', authMiddleware, monitorsRouter);
 
+const botRouter = require('./routers/botRouter');
+app.use('/bot', authMiddleware, botRouter);
+
 app.post('/logout', authController.doLogout);
 
 app.use(require('./middlewares/errorMiddleware'));

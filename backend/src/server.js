@@ -1,19 +1,28 @@
 const database = require('./db');
-const app = require ('./app');
+const app = require('./app');
 const appWs = require('./app-ws');
 const settingsRepository = require('./repositories/settingsRepository');
 const appEm = require('./app-em');
+const bot = require('./bot');
 
-settingsRepository.getDefaultSettings()
-    .then(settings => {
-        const server = app.listen(process.env.PORT, () => {
-            console.log('App está rodando em ' + process.env.PORT);
-        })
+(async () => {
+    console.log('Buscando configurações padrões...');
+    const settings = await settingsRepository.getDefaultSettings();
+    if(!settings) return new Error(`Não há configurações.`);
 
-        const wss = appWs(server);
+    console.log('Inicializando o cérebro do Bot...');
+    //inicializar o bot aqui
+    bot.init([]);
 
-        appEm(settings, wss);
+    console.log('Inicializando o Servidor Apps...');
+    const server = app.listen(process.env.PORT || 3001, () => {
+        console.log('App está rodando em ' + process.env.PORT);
     })
-    .catch(err =>{
-        console.error(err);
-    })
+
+    const wss = appWs(server);
+
+    await appEm.init(settings, wss, bot); //passar o bot
+
+})();
+
+
