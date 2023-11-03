@@ -1,5 +1,4 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { useHistory } from "react-router-dom/cjs/react-router-dom";
 import { getSymbols } from "../../services/SymbolsServices";
 import SelectQuote, {getDefaultQuote} from "../menu/SelectQuote/SelectQuote";
 
@@ -14,7 +13,6 @@ import SelectQuote, {getDefaultQuote} from "../menu/SelectQuote/SelectQuote";
 function SelectSymbol(props) {
 
     const [quote, setQuote] = useState(false);
-    const history = useHistory();
 
     const [symbols, setSymbols] = useState(["CARREGANDO"]);
     const [onlyFavorites, setOnlyFavorites] = useState(props.onlyFavorites === null || props.onlyFavorites === undefined ? true : props.onlyFavorites);
@@ -43,8 +41,7 @@ function SelectSymbol(props) {
                 else setSymbols(["SEM SIMBOLOS"]);
             })
             .catch(err => {
-                if (err.response && err.response.status === 401) return history.push('/');
-                console.error(err);
+                console.error(err.response ? err.response.data : err.message);
                 setSymbols(["ERROR"]);
             })
 

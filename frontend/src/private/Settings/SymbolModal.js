@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
 import { updateSymbol } from "../../services/SymbolsServices";
-import { useHistory } from "react-router-dom/cjs/react-router-dom";
 
 /**
  * props:
@@ -17,7 +16,6 @@ function SymbolModal(props) {
     const minNotionalInput = useRef('');
     const minLotSizeInput = useRef('');
 
-    const history = useHistory();
     const btnClose = useRef('');
     const [error, setError] = useState('');
     const [symbol, setSymbol] = useState({});
@@ -63,12 +61,8 @@ function SymbolModal(props) {
                 btnClose.current.click();
             })
             .catch(err => {
-                if (err.response && err.response.status === 401) {
-                    btnClose.current.click();
-                    return history.push('/');
-                }
-                console.error(err);
-                setError(err.message);
+                console.error(err.response ? err.response.data : err.message);
+                setError(err.response ? err.response.data : err.message);
             });
     }
 

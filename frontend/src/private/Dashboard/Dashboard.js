@@ -10,6 +10,7 @@ import CandleChart from './CandleChart';
 import NewOrderButton from '../../components/menu/NewOrder/NewOrderButton';
 import NewOrderModal from '../../components/menu/NewOrder/NewOrderModal';
 import SelectSymbol from '../../components/SelectSymbol/SelectSymbol';
+import Footer from '../../components/Footer/Footer';
 
 function Dashboard() {
 
@@ -90,6 +91,7 @@ function Dashboard() {
                     <BookTicker data={bookState} />
                     <Wallet data={balanceState} onUpdate={onWalletUpdate} />
                 </div>
+                <Footer/>
             </main>
             <NewOrderModal wallet={wallet} onSubmit={onOrderSubmit} />
         </React.Fragment>

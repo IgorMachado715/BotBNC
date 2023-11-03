@@ -67,12 +67,8 @@ function NewOrderModal(props) {
                 if(props.onSubmit) props.onSubmit(result);
             })
             .catch(err => {
-                if(err.response && err.response.status === 401){
-                    btnClose.current.click();
-                    return history.push('/');
-                }
-                console.error(err);
-                setError(err.message); 
+                console.error(err.response ? err.response.data : err.message);
+                setError(err.response ? err.response.data : err.message);
             })
     }
 
@@ -83,7 +79,6 @@ function NewOrderModal(props) {
 
     useEffect(() => {
         if (!order.symbol) return;
-
         const token = localStorage.getItem('token');
         getSymbol(order.symbol, token)
             .then((symbolObject) => setSymbol(symbolObject))
@@ -93,13 +88,9 @@ function NewOrderModal(props) {
                // setOrder(order);
            // })
             .catch(err => {
-                if (err.response && err.response.status === 401) {
-                    btnClose.click();
-                    return history.push('/');
-                }
-                console.log(err.response ? err.response.data : err.message)
-                setError(err.response ? err.response.data : err.message);
-            });
+                console.error(err.response ? err.response.data : err.message);
+                return setError(err.response ? err.response.data : err.message);
+            })
     }, [order.symbol]);
 
     useEffect(() => {

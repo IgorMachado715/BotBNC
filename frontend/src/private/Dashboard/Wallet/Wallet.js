@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import {getBalance} from "../../../services/ExchangeService";
-import { useHistory } from "react-router-dom/cjs/react-router-dom";
 import '../Dashboard.css';
 
 /**
@@ -9,9 +8,7 @@ import '../Dashboard.css';
  * - onUpdate
  */
 
-function Wallet(props) {
-
-    const history = useHistory();   
+function Wallet(props) { 
 
     const [balances, setBalances] = useState([]);
 
@@ -31,10 +28,7 @@ function Wallet(props) {
                 if(props.onUpdate) props.onUpdate(balances);
                 setBalances(balances);
             })
-            .catch(err => {
-                if(err.response && err.response.status === 401) return history.push('/');
-                console.error(err);
-            })
+            .catch(err => console.error(err.response ? err.response.data : err.message));
     }
 
     

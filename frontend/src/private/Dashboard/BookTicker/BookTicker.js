@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import SelectQuote, { filterSymbolNames, getDefaultQuote } from "../../../components/menu/SelectQuote/SelectQuote";
 import '../Dashboard.css';
 import { getSymbols } from "../../../services/SymbolsServices";
-import { useHistory } from "react-router-dom/cjs/react-router-dom";
 import BookRow from "./BookRow";
 
 /**
@@ -14,8 +13,6 @@ import BookRow from "./BookRow";
 
 function BookTicker(props) {
 
-    const history = useHistory();
-
     const [quote, setQuote] = useState(getDefaultQuote());
 
     const [symbols, setSymbols] = useState([]);
@@ -24,10 +21,7 @@ function BookTicker(props) {
         const token = localStorage.getItem('token');
         getSymbols(token)
             .then(symbols => setSymbols(filterSymbolNames(symbols, quote)))
-            .catch(err => {
-                if (err.response && err.response.status === 401) return history.push('/');
-                console.error(err);
-            });
+            .catch(err => console.error(err.response ? err.response.data : err.message));
     }, [quote]);
 
     function onQuoteChange(event) {

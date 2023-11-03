@@ -4,6 +4,7 @@ import Login from "./public/Login/Login";
 import Settings from "./private/Settings/Settings";
 import Dashboard from "./private/Dashboard/Dashboard";
 import Orders from "./private/Orders/Orders";
+import Monitors from "./private/Monitors/Monitors";
 
 //definição de rota e componente renderizado para essa pagina
 //abaixo cria-se rotas para paginas
@@ -31,6 +32,9 @@ function Routes() {
             </PrivateRoute>
             <PrivateRoute path="/dashboard">
                 <Dashboard />
+            </PrivateRoute>
+            <PrivateRoute path="/monitors">
+                <Monitors />
             </PrivateRoute>
             <PrivateRoute path="/orders/:symbol?">
                 <Orders />

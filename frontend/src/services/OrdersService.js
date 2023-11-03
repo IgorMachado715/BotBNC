@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios from './BaseServices';
 
 const API_URL = process.env.REACT_APP_API_URL;
 const ORDERS_URL = `${API_URL}/orders/`;
