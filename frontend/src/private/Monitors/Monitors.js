@@ -63,7 +63,7 @@ function Monitor() {
     }
 
     function onModalSubmit(event){
-        
+        history.go(0);
     }
 
     return (
