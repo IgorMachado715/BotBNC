@@ -35,6 +35,6 @@ export async function stopMonitor(id, token){
 
 export async function deleteMonitor(id, token){
     const headers = {'authorization': token}
-    const response = await axios.delete(`${MONITORS_URL}${id}`, {}, {headers});
+    const response = await axios.delete(`${MONITORS_URL}${id}`, {headers});
     return response.data;
 }

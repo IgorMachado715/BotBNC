@@ -18,7 +18,7 @@ function MonitorType(props){
         return(
             <div className="form-group">
                 <label htmlFor="type">Tipo:</label>
-                <select id="type" ref={selectRef} className="form-select" onChange={props.onChange}>
+                <select id="type" ref={selectRef} className="form-select" onChange={props.onChange} disabled={true}> 
                     <option value="BOOK">Book</option>
                     <option value="CANDLES">Candles</option>
                     <option value="MINI_TICKER">Mini Ticker</option>

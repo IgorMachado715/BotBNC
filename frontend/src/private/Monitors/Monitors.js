@@ -3,7 +3,7 @@ import { useLocation, useHistory } from "react-router-dom/cjs/react-router-dom.m
 import Menu from "../../components/menu/Menu";
 import Pagination from "../../components/Pagination/Pagination";
 import Footer from "../../components/Footer/Footer";
-import {getMonitors} from "../../services/MonitorsService"
+import {getMonitors, deleteMonitor, startMonitor, stopMonitor} from "../../services/MonitorsService"
 import MonitorRow from "./MonitorRow";
 import MonitorModal from "./MonitorModal/MonitorModal";
 
@@ -29,12 +29,16 @@ function Monitor() {
     const [page, setPage] = useState(getPage());
 
     const [monitors, setMonitors] = useState([]);
-    const [editMonitor, setEditMonitor] = useState({
-        type: 'CANDLES',
-        interval: '1m',
-        isActive: false,
-        logs: false
-    });
+
+    const DEFAULT_MONITOR = {
+            symbol: 'BTCUSDT',
+            type: 'CANDLES',
+            interval: '1m',
+            isActive: false,
+            logs: false
+        }
+    
+    const [editMonitor, setEditMonitor] = useState(DEFAULT_MONITOR);
 
     useEffect(() => {
         const token = localStorage.getItem('token');
@@ -47,23 +51,40 @@ function Monitor() {
     },[page])
 
     function onEditClick(event){
-
+        const id = event.target.id.replace('edit', '');
+        setEditMonitor(monitors.find(m => m.id == id));
     }
 
     function onStartClick(event){
-
+        const id = event.target.id.replace('start', '');
+        const token = localStorage.getItem('token');
+        startMonitor(id, token)
+            .then(monitor => {history.go(0)})
+            .catch(err => console.error(err.response ? err.response.data : err.message));
     }
 
     function onStopClick(event){
-
+        const id = event.target.id.replace('stop', '');
+        const token = localStorage.getItem('token');
+        stopMonitor(id, token)
+            .then(monitor => {history.go(0)})
+            .catch(err => console.error(err.response ? err.response.data : err.message));
     }
 
     function onDeleteClick(event){
-
+        const id = event.target.id.replace('delete', '');
+        const token = localStorage.getItem('token');
+        deleteMonitor(id, token)
+        .then(monitor => {history.go(0)})
+        .catch(err => console.error(err.response ? err.response.data : err.message));
     }
 
     function onModalSubmit(event){
         history.go(0);
+    }
+
+    function onNewMonitorClick(event){
+        setEditMonitor(DEFAULT_MONITOR);
     }
 
     return (
@@ -76,7 +97,7 @@ function Monitor() {
                     </div>
                     <div className="btn-toolbar mb-2 mb-md-0">
                         <div className="d-inline-flex align-items-center">
-                            <button id="btnNewMonitor" className="btn btn-primary animate-up-2" data-bs-toggle="modal" data-bs-target="#modalMonitor" >
+                            <button id="btnNewMonitor" className="btn btn-primary animate-up-2" data-bs-toggle="modal" data-bs-target="#modalMonitor" onClick={onNewMonitorClick}>
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" className="icon icon-xs me-2">
                                     <path clipRule='evenodd' fillRule='evenodd' stroke-linecap="round" stroke-linejoin="round" d="M9 17.25v1.007a3 3 0 01-.879 2.122L7.5 21h9l-.621-.621A3 3 0 0115 18.257V17.25m6-12V15a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 15V5.25m18 0A2.25 2.25 0 0018.75 3H5.25A2.25 2.25 0 003 5.25m18 0V12a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 12V5.25" />
                                 </svg>

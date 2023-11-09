@@ -2,7 +2,7 @@ const WebSocket = require('ws');
 const crypto = require('./utils/crypto');
 const ordersRepository = require('./repositories/ordersRepository');
 const { getActiveMonitors, monitorTypes } = require('./repositories/monitorsRepository');
-const { RSI, MACD, indexKeys } = require('./utils/indexes');
+const {StochRSI ,BollingerBands ,EMA ,SMA ,RSI, MACD, indexKeys } = require('./utils/indexes');
 const { or } = require('sequelize');
 
 let WSS, bot, exchange;
@@ -10,7 +10,7 @@ let WSS, bot, exchange;
 function startMiniTickerMonitor(broadcastLabel, logs) {
     if (!exchange) return new Error(`Monitor de exchange não iniciado.`);
 
-    exchange.miniTickerStream(async(markets) => {
+    exchange.miniTickerStream(async (markets) => {
         if (logs) console.log(markets);
 
         //enviar para o bot
@@ -19,7 +19,7 @@ function startMiniTickerMonitor(broadcastLabel, logs) {
             delete mkt[1].quoteVolume;
             delete mkt[1].eventTime;
             const converted = {};
-            Object.entries(mkt[1]).map(prop => converted[prop[0]] = parseFloat(prop[1 ]));
+            Object.entries(mkt[1]).map(prop => converted[prop[0]] = parseFloat(prop[1]));
             bot.updateMemory(mkt[0], indexKeys.MINI_TICKER, null, converted);
         })
 
@@ -28,7 +28,7 @@ function startMiniTickerMonitor(broadcastLabel, logs) {
         }
         //simulação de book
         const books = Object.entries(markets).map(mkt => {
-            const book = {symbol: mkt[0], bestAsk: mkt[1].close, bestBid: mkt[1].close};
+            const book = { symbol: mkt[0], bestAsk: mkt[1].close, bestBid: mkt[1].close };
             bot.updateMemory(mkt[0], indexKeys.BOOK, null, book);
             return book;
         })
@@ -83,12 +83,12 @@ function processExecutionData(executionData, broadcastLabel) {
         ordersRepository.updateOrderByOrderId(order.orderId, order.clientOrderId, order)
             .then(order => {
                 //enviar para o bot
-                if(order){
+                if (order) {
                     bot.updateMemory(order.symbol, indexKeys.LAST_ORDER, null, order);
                     if (broadcastLabel & WSS) {
                         WSS.broadcast({ [broadcastLabel]: order });
                     }
-            }
+                }
             })
             .catch(err => console.error(err))
     }, 2000)
@@ -98,7 +98,7 @@ function processExecutionData(executionData, broadcastLabel) {
 function startUserDataMonitor(broadcastLabel, logs) {
     if (!exchange) return new Error(`Monitor de exchange não iniciado.`);
 
-    const [balanceBroadcast, executionBroadcast] = broadcastLabel.split(',');
+    const [balanceBroadcast, executionBroadcast] = broadcastLabel ? broadcastLabel.split(',') : [null, null];
 
     loadWallet();
 
@@ -117,22 +117,38 @@ function startUserDataMonitor(broadcastLabel, logs) {
     console.log(`Monitor de User Data iniciado: ${broadcastLabel}!`);
 }
 
-function processChartData(symbol, indexes, interval, ohlc) {
-    indexes.map(index => {
-        switch(index){
-            case indexKeys.RSI: {
-                //RSI(ohlc.close);
-                //calcular e enviar para o bot
-                return bot.updateMemory(symbol, indexKeys.RSI, interval, RSI(ohlc.close));
+function processChartData(symbol, indexes, interval, ohlc, logs) {
+    if (typeof indexes === 'string') indexes = indexes.split(',');
+    if (indexes && indexes.length > 0) {
+        indexes.map(index => {
+
+            const params = index.split('_');//RSI_14
+            const indexName = params[0];
+            params.splice(0, 1);
+
+            let calc;
+            switch (index) { //ou mudar para indexName
+                case indexKeys.RSI: calc = RSI(ohlc.close, ...params);
+                    //RSI(ohlc.close);
+                    //calcular e enviar para o bot
+                    //return bot.updateMemory(symbol, indexKeys.RSI, interval, RSI(ohlc.close));
+                
+                case indexKeys.MACD: calc = MACD(ohlc.close, ...params);
+                    //MACD(ohlc.close);
+                    //calcular e enviar para o bot
+                   // return bot.updateMemory(symbol, indexKeys.MACD, interval, MACD(ohlc.close));
+                case indexKeys.SMA: calc = SMA(ohlc.close, ...params); break;
+                case indexKeys.EMA: calc = EMA(ohlc.close, ...params); break;
+                case indexKeys.BOLLINGER_BANDS: calc = BollingerBands(ohlc.close, ...params); break;
+                case indexKeys.STOCH_RSI: calc = StochRSI(ohlc.close, ...params); break;
+                
+                default: return;
             }
-            case indexKeys.MACD: {
-                //MACD(ohlc.close);
-                //calcular e enviar para o bot
-                return bot.updateMemory(symbol, indexKeys.MACD, interval, MACD(ohlc.close));
-            }
-            default: return;
-        }
-    })
+            if(logs) console.log(`${index} calculado: ${JSON.stringify(calc.current)}`); //mudar para indexName
+
+            return bot.updateMemory(symbol, index, interval, calc); //mudar para indexName
+        })
+    }
 }
 
 function startChartMonitor(symbol, interval, indexes, broadcastLabel, logs) {
@@ -156,11 +172,24 @@ function startChartMonitor(symbol, interval, indexes, broadcastLabel, logs) {
 
         if (broadcastLabel && WSS) WSS.broadcast(lastCandle);
 
-        processChartData(symbol, indexes, interval, ohlc);
+        processChartData(symbol, indexes, interval, ohlc, logs);
 
     })
 
     console.log(`Monitor Gráfico iniciou em ${symbol}_${interval}!`);
+}
+
+async function stopChartMonitor(symbol, interval, indexes, logs) {
+    if (!symbol) return new Error(`Você não pode iniciar o monitor Gráfico sem um símbolo!`);
+    if (!exchange) return new Error(`Monitor de exchange não iniciado.`);
+
+    exchange.terminateChartStream(symbol, interval);
+    if (logs) console.log(`Monitor Gráfico de ${symbol}_${interval} inativo!`);
+
+    bot.deleteMemory(symbol, 'LAST_CANDLE', interval);
+
+    if (indexes && Array.isArray(indexes))
+        indexes.map(ix => bot.deleteMemory(symbol, ix, interval));
 }
 
 async function init(settings, wssInstance, botInstance) {
@@ -180,10 +209,10 @@ async function init(settings, wssInstance, botInstance) {
                     return startUserDataMonitor(monitor.broadcastLabel, monitor.logs);
                 case monitorTypes.CANDLES:
                     return startChartMonitor(monitor.symbol,
-                                             monitor.interval, 
-                                             monitor.indexes.split(','),
-                                             monitor.broadcastLabel,
-                                             monitor.logs);
+                        monitor.interval,
+                        monitor.indexes.split(','),
+                        monitor.broadcastLabel,
+                        monitor.logs);
             }
         }, 250)
     })
@@ -193,6 +222,7 @@ async function init(settings, wssInstance, botInstance) {
 module.exports = {
     init,
     startChartMonitor,
+    stopChartMonitor
 
 }
 

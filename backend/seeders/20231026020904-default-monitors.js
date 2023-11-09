@@ -49,7 +49,7 @@ module.exports = {
         interval: '1m',
         isActive: true,
         isSystemMon: false,
-        indexes: 'RSI,MACD',
+        indexes: 'RSI_14',
         logs: false,
         createdAt: new Date(),
         updatedAt: new Date()

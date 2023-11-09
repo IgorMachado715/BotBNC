@@ -15,10 +15,14 @@ function SelectSymbol(props) {
     const [quote, setQuote] = useState(false);
 
     const [symbols, setSymbols] = useState(["CARREGANDO"]);
-    const [onlyFavorites, setOnlyFavorites] = useState(props.onlyFavorites === null || props.onlyFavorites === undefined ? true : props.onlyFavorites);
+    const [onlyFavorites, setOnlyFavorites] = useState(showOnlyFavorites());
 
     const selectRef = useRef('');
     const buttonRef = useRef('');
+
+    function showOnlyFavorites(){
+        return props.onlyFavorites !== null || props.onlyFavorites !== undefined ? props.onlyFavorites :  true; 
+    }
 
     useEffect(() => {
         selectRef.current.value = props.symbol || 'BTCUSDT';
@@ -46,6 +50,10 @@ function SelectSymbol(props) {
             })
 
     }, [onlyFavorites]);
+
+    useEffect(() => {
+        selectRef.current.value = props.symbol;
+    }, [props.symbol]);
 
     function onFavoriteClick(event) {
         setOnlyFavorites(!onlyFavorites);

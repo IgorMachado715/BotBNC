@@ -14,7 +14,7 @@ async function monitorExists(type, symbol, interval) {
 }
 
 async function insertMonitor(newMonitor) {
-    const alreadyExists = monitorExists(newMonitor.type, newMonitor.symbol, newMonitor.interval);
+    const alreadyExists = await monitorExists(newMonitor.type, newMonitor.symbol, newMonitor.interval); //adicionei o await
     if (alreadyExists) throw new Error(`Monitor com estes parametros já existe.`);
 
     return monitorModel.create(newMonitor);
@@ -59,10 +59,10 @@ async function updateMonitor(id, newMonitor) {
     else
         currentMonitor.interval = null;
 
-    if (newMonitor.broadcastLabel && newMonitor.broadcastLabel !== currentMonitor.broadcastLabel)
+    if (newMonitor.broadcastLabel !== currentMonitor.broadcastLabel)
         currentMonitor.broadcastLabel = newMonitor.broadcastLabel;
 
-    if (newMonitor.indexes && newMonitor.indexes !== currentMonitor.indexes)
+    if (newMonitor.indexes !== currentMonitor.indexes)
         currentMonitor.indexes = newMonitor.indexes;
 
     if (newMonitor.isActive !== null && newMonitor.isActive !== undefined
