@@ -35,6 +35,9 @@ app.use('/orders', authMiddleware, ordersRouter);
 const monitorsRouter = require('./routers/monitorsRouter');
 app.use('/monitors', authMiddleware, monitorsRouter);
 
+const automationsRouter = require('./routers/automationsRouter');
+app.use('/automations', authMiddleware, automationsRouter);
+
 const botRouter = require('./routers/botRouter');
 app.use('/bot', authMiddleware, botRouter);
 
