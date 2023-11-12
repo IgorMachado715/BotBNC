@@ -4,6 +4,7 @@ const appWs = require('./app-ws');
 const settingsRepository = require('./repositories/settingsRepository');
 const appEm = require('./app-em');
 const bot = require('./bot');
+const automationsRepository = require('./repositories/automationsRepository');
 
 (async () => {
     console.log('Buscando configurações padrões...');
@@ -12,7 +13,8 @@ const bot = require('./bot');
 
     console.log('Inicializando o cérebro do Bot...');
     //inicializar o bot aqui
-    bot.init([]);
+    const automations = await automationsRepository.getActiveAutomations();
+    bot.init(automations); 
 
     console.log('Inicializando o Servidor Apps...');
     const server = app.listen(process.env.PORT || 3001, () => {
