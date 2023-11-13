@@ -1,5 +1,51 @@
 const monitorsRepository = require('../repositories/monitorsRepository');
+const { monitorTypes } = require("../repositories/monitorsRepository");
 const appEm = require('../app-em');
+
+function startStreamMonitor(monitor) {
+    switch (monitor.type) {
+      case monitorTypes.CANDLES: {
+        //const indexes = monitor.indexes ? monitor.indexes.split(",") : [];
+        appEm.startChartMonitor(
+          monitor.id,
+          monitor.symbol,
+          monitor.interval,
+          monitor.indexes ? monitor.indexes.split(",") : [],
+          monitor.broadcastLabel,
+          monitor.logs
+        );
+        break;
+      }
+      case monitorTypes.TICKER: {
+        appEm.startTickerMonitor(
+          monitor.id,
+          monitor.symbol,
+          monitor.broadcastLabel,
+          monitor.logs
+        );
+        break;
+      }
+    }
+  }
+  
+  function stopStreamMonitor(monitor) {
+    switch (monitor.type) {
+      case monitorTypes.CANDLES: {
+        appEm.stopChartMonitor(
+          monitor.id,
+          monitor.symbol,
+          monitor.interval,
+          monitor.indexes ? monitor.indexes.split(",") : [],
+          monitor.logs
+        );
+        break;
+      }
+      case monitorTypes.TICKER: {
+        appEm.stopTickerMonitor(monitor.id, monitor.symbol, monitor.logs);
+        break;
+      }
+    }
+  }
 
 async function startMonitor(req, res, next) {
     const id = req.params.id;
@@ -47,7 +93,7 @@ async function getMonitors(req, res, next) {
 }
 
 async function insertMonitor(req, res, next) {
-    const newMonitor = req.body;
+    const newMonitor = validateMonitor(req.body);
     const savedMonitor = await monitorsRepository.insertMonitor(newMonitor);
 
     if (savedMonitor.isActive) {

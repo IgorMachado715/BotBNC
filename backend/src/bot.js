@@ -1,3 +1,5 @@
+const { getDefaultSettings } = require("./repositories/settingsRepository");
+
 const MEMORY = {}
 
 let BRAIN = {}
@@ -10,9 +12,9 @@ let LOCK_BRAIN = false;
 
 const LOGS = process.env.BOT_LOGS === 'true';
 
-function init(automations){
+function init(automations) {
     //carregar o cérebro
-    try{
+    try {
         LOCK_BRAIN = true;
         LOCK_MEMORY = true;
 
@@ -21,28 +23,28 @@ function init(automations){
 
         automations.map(auto => updateBrain(auto));
     }
-    finally{
+    finally {
         LOCK_BRAIN = false;
         LOCK_MEMORY = false;
         console.log('Cérebro do Bot iniciado!');
     }
 }
 
-function updateBrain(automation){
-    if(!automation.isActive) return;
+function updateBrain(automation) {
+    if (!automation.isActive || !automation.conditions) return;
 
     BRAIN[automation.id] = automation;
     automation.indexes.split(',').map(ix => updateBrainIndex(ix, automation.id));
 }
 
-function updateBrainIndex(index, automationId){
-    if(!BRAIN_INDEX[index]) BRAIN_INDEX[index] = [];
+function updateBrainIndex(index, automationId) {
+    if (!BRAIN_INDEX[index]) BRAIN_INDEX[index] = [];
     BRAIN_INDEX[index].push(automationId);
 }
 
-function updateMemory(symbol, index, interval, value){
+function updateMemory(symbol, index, interval, value, executeAutomations = true) {
 
-    if(LOCK_MEMORY) return;
+    if (LOCK_MEMORY) return false;
 
     //symbol:index_interval
     //BTCUSD:RSI_1m
@@ -51,32 +53,132 @@ function updateMemory(symbol, index, interval, value){
     const memoryKey = `${symbol}:${indexKey}`;
     MEMORY[memoryKey] = value;
 
-    if(LOGS) console.log(`Memória do Bot atualizada: ${memoryKey} => ${JSON.stringify(value)}`);
+    if (LOGS) console.log(`Memória do Bot atualizada: ${memoryKey} => ${JSON.stringify(value)}`);
 
     //lógica de processamento do estímulo
+    if (LOCK_BRAIN){
+        if (LOGS) console.log(`Cérebro do Bot está bloqueado!`);
+        return false;
+    } 
+
+    if(!executeAutomations) return false;
+
+    try {
+        const automations = findAutomations(memoryKey);
+        if (automations && automations.length > 0 && !LOCK_BRAIN) {
+            LOCK_BRAIN = true;
+            let results = automations.map(auto => {
+                //testes das automações
+                return evalDecision(auto);
+            })
+
+                .flat();
+
+            //[[a], [b]]
+            //[a,b]
+
+            results = results.filter(r => r);
+
+            if (!results || !results.length)
+                return false;
+            else
+                return results;
+        }
+    }
+    finally {
+        LOCK_BRAIN = false;
+    }
 }
 
-function deleteMemory(symbol, index, interval){
-    
-    try{
+function invertConditions(conditions) {
+    const conds = conditions.split(' && ');
+    return conds.map(c => {
+        if (c.indexOf('current') !== -1) {
+            if (c.indexOf('>') !== -1) return c.replace('>', '<').replace('current', 'previous');
+            if (c.indexOf('<') !== -1) return c.replace('<', '>').replace('current', 'previous');
+            if (c.indexOf('!') !== -1) return c.replace('!', '').replace('current', 'previous');
+            if (c.indexOf('==') !== -1) return c.replace('==', '!==').replace('current', 'previous');
+        }
+    })
+        .filter(c => c)
+        .join(' && ');
+}
+
+async function evalDecision(automation) {
+    const indexes = automation.indexes.split(',');
+    const isChecked = indexes.every(ix => MEMORY[ix] !== null && MEMORY[ix] !== undefined);
+    if (!isChecked) return false;
+
+    //BTCUSDT:RSI_1m > 70
+
+    const invertedConditions = invertConditions(automation.conditions);
+    const isValid = eval(automation.conditions + (invertedConditions ? ' && ' + invertedConditions : ''));
+    if (!isValid) return false;
+
+    if (LOGS) console.log(`Bot avaliou uma condição na automação: ${automation.name}`);
+
+    if(!automation.actions) {
+        if(LOGS) console.log(`Nenhuma ação definar para a automação: ${automation.name}`);
+        return false;
+    }
+
+    const settings = await getDefaultSettings(); 
+    //para cada ação da automação, executa a ação com as settings
+
+    console.log('AÇÕES EXECUTADAS');
+    //executar ações
+}
+
+function findAutomations(memoryKey) {
+    const ids = BRAIN_INDEX[memoryKey];
+    if (!ids) return [];
+    return ids.map(id => BRAIN[id]);
+}
+
+
+function deleteMemory(symbol, index, interval) {
+
+    try {
+        index = index.replace(/_[0-9]+/g, '');
         const indexKey = interval ? `${index}_${interval}` : index;
         const memoryKey = `${symbol}:${indexKey}`;
         delete MEMORY[memoryKey];
-        LOCK_MEMORY = true;
 
-        if(LOGS) console.log(`Memória do Bot apaga: ${memoryKey}`);
+        LOCK_MEMORY = true;
+        delete MEMORY[memoryKey];
     }
-    finally{
+    finally {
         LOCK_MEMORY = false;
     }
-}   
-
-function getMemory(){
-    return {...MEMORY};
+    if (LOGS) console.log(`Memória do Bot apaga: ${memoryKey}`);
 }
 
-function getBrainIndexes(){
-    return {...BRAIN_INDEX};
+function deleteBrainIndex(indexes, automationId) {
+    if (typeof indexes === 'string') indexes = indexes.split(',');
+    indexes.forEach(ix => {
+        if (!BRAIN_INDEX[ix] || BRAIN_INDEX[ix].length === 0) return;
+        const pos = BRAIN_INDEX[ix].findIndex(id => id === automationId);
+        BRAIN_INDEX[ix].splice(pos, 1);
+    })
+}
+
+function deleteBrain(automation) {
+    try {
+        LOCK_BRAIN = true;
+        delete BRAIN[automation.id];
+        deleteBrainIndex(automation.indexes.split(','), automation.id);
+    }
+    finally {
+        LOCK_BRAIN = false;
+    }
+}
+
+function getMemory() {
+    return { ...MEMORY };
+}
+
+function getBrainIndexes() {
+    return { ...BRAIN_INDEX };
 }
 
 /*
@@ -95,27 +197,27 @@ function getBrainIndexes(){
  *
  */
 
-function flattenObject(ob){
+function flattenObject(ob) {
     let toReturn = {};
 
-    for(let i in ob){
-        if(!ob.hasOwnProperty(i)) continue;
+    for (let i in ob) {
+        if (!ob.hasOwnProperty(i)) continue;
 
-        if((typeof ob[i]) === 'object' && ob[i] !== null ){
+        if ((typeof ob[i]) === 'object' && ob[i] !== null) {
             let flatObject = flattenObject(ob[i]);
-            for(let x in flatObject){
-                if(!flatObject.hasOwnProperty(x)) continue;
+            for (let x in flatObject) {
+                if (!flatObject.hasOwnProperty(x)) continue;
                 toReturn[i + '.' + x] = flatObject[x];
             }
-        }else{
+        } else {
             toReturn[i] = ob[i];
         }
     }
     return toReturn;
 }
 
-function getEval(prop){
-    if(prop.indexOf('.') === -1) return `MEMORY['${prop}']`;
+function getEval(prop) {
+    if (prop.indexOf('.') === -1) return `MEMORY['${prop}']`;
 
     //BTCUSDT:LAST_CANDLE_1m.open
     const propSplit = prop.split('.');
@@ -125,7 +227,7 @@ function getEval(prop){
     return `MEMORY['${memKey}']${memProp}`;
 }
 
-function getMemoryIndexes(){
+function getMemoryIndexes() {
     return Object.entries(flattenObject(MEMORY)).map(prop => {
         const propSplit = prop[0].split(':');
         return {
@@ -135,23 +237,25 @@ function getMemoryIndexes(){
             example: prop[1]
         }
     })
-    .sort((a, b) => {
-        if(a.variable < b.variable) return -1;
-        if(a.variable > b.variable) return 1;
-        return 0;
-    })
+        .sort((a, b) => {
+            if (a.variable < b.variable) return -1;
+            if (a.variable > b.variable) return 1;
+            return 0;
+        })
 }
 
-function getBrain(){
-    return {...BRAIN};
+function getBrain() {
+    return { ...BRAIN };
 }
 
 module.exports = {
     deleteMemory,
     updateMemory,
     getMemory,
-    getBrain,
-    init,
     getMemoryIndexes,
-    getBrainIndexes
+    init,
+    getBrainIndexes,
+    deleteBrain,
+    updateBrain,
+    getBrain,
 }

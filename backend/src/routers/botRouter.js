@@ -10,6 +10,6 @@ router.get('/brain/indexes', botController.getBrainIndexes);
 
 router.get('/brain', botController.getBrain);
 
-
+router.get('/analysis', botController.getAnalysisIndexes);
 
 module.exports = router;

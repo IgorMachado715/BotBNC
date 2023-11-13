@@ -50,7 +50,7 @@ function MonitorModal(props) {
             <div className="modal-dialog modal-dialog-centered" role="document">
                 <div className="modal-content">
                     <div className="modal-header">
-                        <p className="modal-title" id="modalTitleNotify">{props.data.id ? 'Edit ' : 'New '}Monitor</p>
+                        <p className="modal-title" id="modalTitleNotify">{props.data.id ? 'Editar ' : 'Novo '}Monitor</p>
                         <button ref={btnClose} type="button" className="btn-close" data-bs-dismiss="modal" aria-label="close"></button>
                     </div>
                     <div className="modal-body">

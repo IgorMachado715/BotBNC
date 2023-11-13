@@ -2,7 +2,7 @@ const WebSocket = require('ws');
 const crypto = require('./utils/crypto');
 const ordersRepository = require('./repositories/ordersRepository');
 const { getActiveMonitors, monitorTypes } = require('./repositories/monitorsRepository');
-const {StochRSI ,BollingerBands ,EMA ,SMA ,RSI, MACD, indexKeys } = require('./utils/indexes');
+const { execCalc, indexKeys } = require('./utils/indexes');
 const { or } = require('sequelize');
 
 let WSS, bot, exchange;
@@ -117,38 +117,38 @@ function startUserDataMonitor(broadcastLabel, logs) {
     console.log(`Monitor de User Data iniciado: ${broadcastLabel}!`);
 }
 
-function processChartData(symbol, indexes, interval, ohlc, logs) {
+async function processChartData(//monitorId, 
+    symbol, indexes, interval, ohlc, logs) {
     if (typeof indexes === 'string') indexes = indexes.split(',');
-    if (indexes && indexes.length > 0) {
-        indexes.map(index => {
+    if (!indexes || !Array.isArray(indexes) || indexes.length === 0) return false;
 
-            const params = index.split('_');//RSI_14
-            const indexName = params[0];
-            params.splice(0, 1);
+    const memoryKeys = [];
 
-            let calc;
-            switch (index) { //ou mudar para indexName
-                case indexKeys.RSI: calc = RSI(ohlc.close, ...params);
-                    //RSI(ohlc.close);
-                    //calcular e enviar para o bot
-                    //return bot.updateMemory(symbol, indexKeys.RSI, interval, RSI(ohlc.close));
-                
-                case indexKeys.MACD: calc = MACD(ohlc.close, ...params);
-                    //MACD(ohlc.close);
-                    //calcular e enviar para o bot
-                   // return bot.updateMemory(symbol, indexKeys.MACD, interval, MACD(ohlc.close));
-                case indexKeys.SMA: calc = SMA(ohlc.close, ...params); break;
-                case indexKeys.EMA: calc = EMA(ohlc.close, ...params); break;
-                case indexKeys.BOLLINGER_BANDS: calc = BollingerBands(ohlc.close, ...params); break;
-                case indexKeys.STOCH_RSI: calc = StochRSI(ohlc.close, ...params); break;
-                
-                default: return;
-            }
-            if(logs) console.log(`${index} calculado: ${JSON.stringify(calc.current)}`); //mudar para indexName
+    return Promise.all(indexes.map(async (index) => {
+        const params = index.split('_');//RSI_14
+        const indexName = params[0];
+        params.splice(0, 1);
+        try {
+            const calc = execCalc(indexName, ohlc, ...params);
+            //if (logs)
+            //logger("M-" + monitorId,`${index}_${interval} calculated: ${JSON.stringify(calc.current ? calc.current : calc)}`);
 
-            return bot.updateMemory(symbol, index, interval, calc); //mudar para indexName
-        })
-    }
+            if (logs) console.log(`${index} calculado: ${JSON.stringify(calc.current ? calc.current : calc)}`); //mudar para indexName
+
+            return bot.updateMemory(symbol, index, interval, calc, calc.current !== undefined); //mudar para indexName
+
+        }
+        catch (err) {
+            console.error(`Monitor de corretora => Não pode calcular o index ${index}: ${err.message}`);
+            console.error(err);
+            return false;
+        }
+        //return Promise.all(
+        //  memoryKeys.map(async (key) => {
+        //    return beholder.testAutomations(key);
+        //  })
+        //);
+    }));
 }
 
 function startChartMonitor(symbol, interval, indexes, broadcastLabel, logs) {

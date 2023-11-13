@@ -1,5 +1,6 @@
 const Binance = require('node-binance-api');
 const { or } = require('sequelize');
+const LOGS = process.env.BINANCE_LOGS === "true";
 
 module.exports = (settings) => {
     if (!settings) throw new Error('The settings object is required to connect on exchange.');
@@ -69,12 +70,16 @@ module.exports = (settings) => {
 
     async function chartStream(symbol, interval, callback){
         const binance = new Binance().options({ family: 0 });
-        binance.websockets.chart(symbol, interval, (symbol, interval, chart) => {
+        const streamUrl = binance.websockets.chart(symbol, interval, (symbol, interval, chart) => {
+            const tick = binance.last(chart);
+            if(tick && chart[tick] && chart[tick].isFinal === false)
+                return;
             //console.log(chart);
             const ohlc = binance.ohlc(chart);
             //console.log(ohlc);
             callback(ohlc);
-        })
+        });
+        if(LOGS) console.log(`Chart Stream conectado em ${streamUrl}`);
     }
 
     function terminateChartStream(symbol, interval){
