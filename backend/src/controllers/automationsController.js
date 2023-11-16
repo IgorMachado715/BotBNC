@@ -1,7 +1,9 @@
 const automationsRepository = require('../repositories/automationsRepository');
+const actionsRepository = require('../repositories/actionsRepository');
 const appEm = require('../app-em');
 const bot = require('../bot');
 const { json } = require('sequelize');
+const db = require('../db');
 
 function validateConditions(conditions) {
     return /^(MEMORY\[\'.+?\'\](\..+)?[><=!]+([0-9\.]+|(\'.+?\')|true|false|MEMORY\[\'.+?\'\](\..+)?)( && )?)+$/gi.test(
@@ -56,11 +58,32 @@ async function insertAutomation(req, res, next) {
     if (!validateConditions(newAutomation.conditions))
         return res.status(400), json(`Condições inválidas!`);
 
-    const savedAutomation = await automationsRepository.insertAutomation(newAutomation);
+    if (!newAutomation.actions || !newAutomation.actions.length === 0)
+        return res.status(400), json(`Ações inválidas!`);
+
+    const transaction = await db.transaction();
+    let savedAutomation, actions;
+
+    try {
+        savedAutomation = await automationsRepository.insertAutomation(newAutomation, transaction);
+
+        actions = newAutomation.actions.map(a => {
+            a.automationId = savedAutomation.id;
+            return a;
+        })
+        actions = await actionsRepository.insertActions(actions, transaction);
+        await transaction.commit();
+    }
+    catch (err) {
+        await transaction.rollback();
+        return res.status(500).json(err.message);
+    }
+    savedAutomation = savedAutomation.get({ plain: true });
+    savedAutomation.actions = actions.map(a => a.get({plain: true}));
 
     if (savedAutomation.isActive) {
         //atualiza cérebro do bot
-        bot.updateAutomation(savedAutomation.get({ plain: true }));
+        bot.updateAutomation(savedAutomation);
 
     }
     res.status(201).json(savedAutomation.get({ plain: true })); //de savedAutomation para automation
@@ -72,6 +95,25 @@ async function updateAutomation(req, res, next) {
 
     if (!validateConditions(newAutomation.conditions))
         return res.status(400), json(`Condições inválidas!`);
+
+    if(newAutomation.actions && newAutomation.actions.length > 0){
+        const actions = newAutomation.actions.map(a => {
+            a.automationId = id;
+            return a;
+        })
+
+        const transaction = await db.transaction();
+
+        try{
+            await actionsRepository.deleteActions(id, transaction);
+            await actionsRepository.insertActions(actions, transaction);
+            await transaction.commit();
+        }
+        catch(err){
+            await transaction.rollback();
+            return res.status(500).json(err.message);
+        }
+    }
 
     const updatedAutomation = await automationsRepository.updateAutomation(id, newAutomation);
 
@@ -98,8 +140,18 @@ async function deleteAutomation(req, res, next) {
         bot.deleteBrain(currrentAutomation.get({ plain: true }));
     }
 
-    await automationsRepository.deleteAutomation(id);
-    res.sendStatus(204);
+    const transaction = await db.transaction();
+
+    try{
+        await actionsRepository.deleteActions(id, transaction);
+        await automationsRepository.deleteAutomation(id, transaction);
+        await transaction.commit();
+        res.sendStatus(204);
+    }
+    catch(err){
+        await transaction.rollback();
+        return res.sendStatus(500).json(err.message);
+    }
 }
 
 function validateMonitor(newMonitor) { //criei essa função

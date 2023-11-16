@@ -1,4 +1,5 @@
 const { getDefaultSettings } = require("./repositories/settingsRepository");
+const {actionsTypes} = require('./repositories/actionsRepository');
 
 const MEMORY = {}
 
@@ -104,6 +105,23 @@ function invertConditions(conditions) {
         .join(' && ');
 }
 
+function doAction(settings, action, automation){
+    try {
+        switch(action.type){
+            case actionsTypes.ALERT_EMAIL: return{type: 'succes', text: 'Email enviado'};
+            case actionsTypes.ALERT_SMS: return{type: 'succes', text: 'SMS enviado'};
+            case actionsTypes.ORDER: return{type: 'succes', text: 'Order posicionada'};
+        }
+    }
+    catch(err){
+        if(automation.logs){
+            console.error(`${automation.name}:${action.type}`);
+            console.error(err);
+        }
+        return{type: 'error', text: `Erro em ${automation.name}: ${err.message}`};
+    }
+}
+
 async function evalDecision(automation) {
     const indexes = automation.indexes.split(',');
     const isChecked = indexes.every(ix => MEMORY[ix] !== null && MEMORY[ix] !== undefined);
@@ -123,9 +141,18 @@ async function evalDecision(automation) {
     }
 
     const settings = await getDefaultSettings(); 
+    const results = automation.actions.map(action => {
+        return doAction(settings, action, automation);
+        console.log('AÇÕES EXECUTADAS');
+
+    })
+
+    if(automation.logs)  console.log(`Automação ${automation.name} disparada!`);
+
+    return results;
     //para cada ação da automação, executa a ação com as settings
 
-    console.log('AÇÕES EXECUTADAS');
+   
     //executar ações
 }
 

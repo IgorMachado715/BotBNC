@@ -20,7 +20,8 @@ function startMiniTickerMonitor(broadcastLabel, logs) {
             delete mkt[1].eventTime;
             const converted = {};
             Object.entries(mkt[1]).map(prop => converted[prop[0]] = parseFloat(prop[1]));
-            bot.updateMemory(mkt[0], indexKeys.MINI_TICKER, null, converted);
+            const results = bot.updateMemory(mkt[0], indexKeys.MINI_TICKER, null, converted);
+            if (results) results.map(r => WSS.broadcast({ notification: r }));
         })
 
         if (broadcastLabel && WSS) {
@@ -29,7 +30,8 @@ function startMiniTickerMonitor(broadcastLabel, logs) {
         //simulação de book
         const books = Object.entries(markets).map(mkt => {
             const book = { symbol: mkt[0], bestAsk: mkt[1].close, bestBid: mkt[1].close };
-            bot.updateMemory(mkt[0], indexKeys.BOOK, null, book);
+            const results = bot.updateMemory(mkt[0], indexKeys.BOOK, null, book);
+            if (results) results.map(r => WSS.broadcast({ notification: r }));
             return book;
         })
         if (WSS) WSS.broadcast({ book: books });
@@ -43,7 +45,8 @@ async function loadWallet() {
     const wallet = Object.entries(info).map(async (item) => {
         //enviar para o bot
 
-        bot.updateMemory(item[0], indexKeys.WALLET, null, parseFloat(item[1].available));
+        const results = bot.updateMemory(item[0], indexKeys.WALLET, null, parseFloat(item[1].available));
+        if (results) results.map(r => WSS.broadcast({ notification: r }));
 
         return {
             symbol: item[0],
@@ -84,7 +87,8 @@ function processExecutionData(executionData, broadcastLabel) {
             .then(order => {
                 //enviar para o bot
                 if (order) {
-                    bot.updateMemory(order.symbol, indexKeys.LAST_ORDER, null, order);
+                    const results = bot.updateMemory(order.symbol, indexKeys.LAST_ORDER, null, order);
+                    if (results) results.map(r => WSS.broadcast({ notification: r }));
                     if (broadcastLabel & WSS) {
                         WSS.broadcast({ [broadcastLabel]: order });
                     }
@@ -124,7 +128,7 @@ async function processChartData(//monitorId,
 
     const memoryKeys = [];
 
-    return Promise.all(indexes.map(async (index) => {
+    return Promise.all(indexes.map((index) => {
         const params = index.split('_');//RSI_14
         const indexName = params[0];
         params.splice(0, 1);
@@ -168,11 +172,14 @@ function startChartMonitor(symbol, interval, indexes, broadcastLabel, logs) {
         if (logs) console.log(lastCandle);
 
         //enviar para o bot
-        bot.updateMemory(symbol, indexKeys.LAST_CANDLE, interval, lastCandle);
+        let results = bot.updateMemory(symbol, indexKeys.LAST_CANDLE, interval, lastCandle);
+        if (results) results.map(r => WSS.broadcast({ notification: r }));
 
         if (broadcastLabel && WSS) WSS.broadcast(lastCandle);
 
         processChartData(symbol, indexes, interval, ohlc, logs);
+        //results.flat().map((r) => sendMessage({ notification: r }));
+    
 
     })
 

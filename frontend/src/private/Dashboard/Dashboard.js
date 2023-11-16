@@ -11,12 +11,13 @@ import NewOrderButton from '../../components/menu/NewOrder/NewOrderButton';
 import NewOrderModal from '../../components/menu/NewOrder/NewOrderModal';
 import SelectSymbol from '../../components/SelectSymbol/SelectSymbol';
 import Footer from '../../components/Footer/Footer';
+import Toast from '../../components/Toast/Toast';
 
 function Dashboard() {
 
     const history = useHistory();
 
-    const [miniTickerState, setTickerState] = useState({});
+    const [miniTickerState, setMiniTickerState] = useState({});
 
     const [bookState, setBookState] = useState({});
 
@@ -28,20 +29,12 @@ function Dashboard() {
 
     const [notification, setNotification] = useState({ type: "", text: "" });
 
-    function onWalletUpdate(walletObj) {
-        setWallet(walletObj);
-    }
-
-    function onOrderSubmit(order) {
-        history.push('/orders/' + order.symbol);
-    }
-
     const { lastJsonMessage } = useWebSocket(process.env.REACT_APP_WS_URL, {
         onOpen: () => console.log(`Connected to App WS`),
         onMessage: () => {
             if (lastJsonMessage) {
                 if (lastJsonMessage.miniTicker)
-                    setTickerState(lastJsonMessage.miniTicker);
+                setMiniTickerState(lastJsonMessage.miniTicker);
                 else if (lastJsonMessage.balance)
                     setBalanceState(lastJsonMessage.balance);
                 else if (lastJsonMessage.book) {
@@ -53,14 +46,23 @@ function Dashboard() {
             }
         },
         queryParams: { token: localStorage.getItem("token") },
-        onError: (event) => {
-            console.error(event);
-            setNotification({ type: "error", text: event });
+        onError: (err) => {
+            console.error(err);
+            setNotification({ type: "error", text: err.message });
+            
         },
         shouldReconnect: (closeEvent) => true,
         reconnectInterval: 3000,
 
     });
+
+    function onWalletUpdate(walletObj) {
+        setWallet(walletObj);
+    }
+
+    function onOrderSubmit(order) {
+        history.push('/orders/' + order.symbol);
+    }
 
     function onSymbolChange(event){
         setChartSymbol(event.target.value);
@@ -76,7 +78,7 @@ function Dashboard() {
                     </div>
                     <div className="btn-toolbar mb-md-0">
                         <div className="d-inline-flex align-items-center">
-                            <SelectSymbol onChange={onSymbolChange} />
+                            <SelectSymbol onChange={onSymbolChange} symbol={chartSymbol}/>
                         </div>
                         <div className="ms-2 ms-lg-3">
                             <NewOrderButton />
@@ -94,6 +96,7 @@ function Dashboard() {
                 <Footer/>
             </main>
             <NewOrderModal wallet={wallet} onSubmit={onOrderSubmit} />
+            <Toast type={notification.type} text={notification.text} />
         </React.Fragment>
     );
 }

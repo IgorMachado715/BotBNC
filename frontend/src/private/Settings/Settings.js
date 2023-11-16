@@ -3,7 +3,7 @@ import { getSettings, updateSettings } from '../../services/SettingsService';
 import Menu from "../../components/menu/Menu";
 import Symbols from "./Symbols";
 import Footer from "../../components/Footer/Footer";
-
+import Toast from "../../components/Toast/Toast";
 
 function Settings() {
 
@@ -19,6 +19,8 @@ function Settings() {
 
     const [success, setSuccess] = useState('');
 
+    const [notification, setNotification] = useState({type: '', text: ''});
+
     useEffect(() => {
 
         const token = localStorage.getItem("token");
@@ -32,7 +34,7 @@ function Settings() {
             })
             .catch(err => {
                 console.error(err.response ? err.response.data : err.message);
-                setError(err.response ? err.response.data : err.message);
+                setNotification({type: 'error', text: err.response ? err.response.data : err.message});
             })
 
     }, [])
@@ -42,7 +44,7 @@ function Settings() {
 
         if ((inputNewPassword.current.value || inputConfirmPassword.current.value)
             && inputNewPassword.current.value !== inputConfirmPassword.current.value) {
-            return setError(`Os campos Nova Senha e Confirme sua Senha devem ser iguais.`);
+            return setNotification({type: 'error', text: `Os campos Nova Senha e Confirme sua Senha devem ser iguais.`});
         }
 
         const token = localStorage.getItem('token');
@@ -56,20 +58,17 @@ function Settings() {
         }, token)
             .then(result => {
                 if (result) {
-                    setError('');
-                    setSuccess(`Configurações atualizadas com sucesso!`);
+                    setNotification({type: 'success', text: `Configurações atualizadas com sucesso!`});
                     inputSecretKey.current.value = '';
                     inputNewPassword.current.value = '';
                     inputConfirmPassword.current.value = '';
                 } else {
-                    setSuccess('');
-                    setError(`Não foi possível atualizar as configurações`);
+                    setNotification({type: 'error', text: `Não foi possível atualizar as configurações`});
                 }
             })
             .catch(error => {
-                setSuccess('');
                 console.error(error.response ? error.response.data : error.message);
-                setError(`Não foi possível atualizar as configurações`);
+                setNotification({type: 'error', text: `Não foi possível atualizar as configurações`});
             })
     }
 
@@ -148,16 +147,6 @@ function Settings() {
                                         <div className="col-sm-3">
                                             <button class="btn btn-gray-800 mt-2 animate-up-2" type="submit">Salvar</button>
                                         </div>
-                                        {
-                                            error ?
-                                                <div className="alert alert-danger mt-2 col-9 py-2">{error}</div>
-                                                : <React.Fragment></React.Fragment>
-                                        }
-                                        {
-                                            success ?
-                                                <div className="alert alert-success mt-2 col-9 py-2">{success}</div>
-                                                : <React.Fragment></React.Fragment>
-                                        }
                                     </div>
                                 </div>
                             </form>
@@ -167,6 +156,7 @@ function Settings() {
                 <Symbols />
                 <Footer/>
             </main>
+            <Toast type={notification.type} text={notification.text} />
         </React.Fragment>
     )
 }

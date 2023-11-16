@@ -17,16 +17,18 @@ function BookTicker(props) {
 
     const [symbols, setSymbols] = useState([]);
 
-    useEffect(() => {
-        const token = localStorage.getItem('token');
-        getSymbols(token)
-            .then(symbols => setSymbols(filterSymbolNames(symbols, quote)))
-            .catch(err => console.error(err.response ? err.response.data : err.message));
-    }, [quote]);
-
     function onQuoteChange(event) {
         setQuote(event.target.value);
     }
+
+    useEffect(() => {
+        const token = localStorage.getItem('token');
+        getSymbols(token)
+            .then((symbols) => setSymbols(filterSymbolNames(symbols, quote)))
+            .catch((err) => console.error(err.response ? err.response.data : err.message));
+    }, [quote]);
+
+    
 
     //if (!props || !props.data) return (<React.Fragment></React.Fragment>);
 

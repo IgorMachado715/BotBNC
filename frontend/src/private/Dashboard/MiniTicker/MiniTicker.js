@@ -54,7 +54,7 @@ function MiniTicker(props) {
                         </thead>
                         <tbody>
                             {
-                                symbols.map(item => (
+                                symbols.map((item) => (
                                     <TickerRow key={item} symbol={item} data={props.data[item]} />
                                 ))
                             }

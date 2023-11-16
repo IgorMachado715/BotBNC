@@ -87,9 +87,18 @@ function MonitorIndex(props) {
                             </select>
                             <input ref={inputPeriod} type="text" id="params" placeholder="params" className="d-none" />
                             <button type="button" className="btn btn-secondary" ref={btnAddIndex} onClick={onAddIndexClick}>
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" className="icon icon-xs">
-                                    <path fillRule="evenodd" stroke-linecap="round" stroke-linejoin="round" d="M12 9v6m3-3H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
+                            <svg
+                                className="icon icon-xs"
+                                fill="currentColor"
+                                viewBox="0 0 20 20"
+                                xmlns="http://www.w3.org/2000/svg"
+                            >
+                                <path
+                                    fillRule="evenodd"
+                                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z"
+                                    clipRule="evenodd"
+                                />
+                            </svg>
 
                             </button>
                         </div>

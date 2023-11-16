@@ -2,8 +2,8 @@ import React, { useEffect, useState, useMemo } from "react";
 
 /**
  * props:
- * - data
  * - symbol
+ * - data
  */
 
 function TickerRow(props) {
@@ -54,7 +54,7 @@ function TickerRow(props) {
         </tr>
     ), [data.close, data.open, data.high, data.low]);
 
-    return (tickerRow);
+    return tickerRow;
 }
 
 export default TickerRow;

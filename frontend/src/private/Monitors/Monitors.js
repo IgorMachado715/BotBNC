@@ -6,6 +6,7 @@ import Footer from "../../components/Footer/Footer";
 import {getMonitors, deleteMonitor, startMonitor, stopMonitor} from "../../services/MonitorsService"
 import MonitorRow from "./MonitorRow";
 import MonitorModal from "./MonitorModal/MonitorModal";
+import Toast from "../../components/Toast/Toast";
 
 
 function Monitor() {
@@ -30,6 +31,8 @@ function Monitor() {
 
     const [monitors, setMonitors] = useState([]);
 
+    const [notification, setNotification] = useState({type: '', text: ''});
+
     const DEFAULT_MONITOR = {
             symbol: 'BTCUSDT',
             type: 'CANDLES',
@@ -47,7 +50,9 @@ function Monitor() {
             setMonitors(result.rows);
             setCount(result.count);
         })
-        .catch(err => console.error(err.response ? err.response.data : err.message));
+        .catch(err => {console.error(err.response ? err.response.data : err.message);
+        setNotification({type: 'error', text: err.response ? err.response.data : err.message});
+        });
     },[page])
 
     function onEditClick(event){
@@ -60,7 +65,9 @@ function Monitor() {
         const token = localStorage.getItem('token');
         startMonitor(id, token)
             .then(monitor => {history.go(0)})
-            .catch(err => console.error(err.response ? err.response.data : err.message));
+            .catch(err => {console.error(err.response ? err.response.data : err.message);
+            setNotification({type: 'error', text: err.response ? err.response.data : err.message});
+            });
     }
 
     function onStopClick(event){
@@ -68,7 +75,9 @@ function Monitor() {
         const token = localStorage.getItem('token');
         stopMonitor(id, token)
             .then(monitor => {history.go(0)})
-            .catch(err => console.error(err.response ? err.response.data : err.message));
+            .catch(err => {console.error(err.response ? err.response.data : err.message);
+            setNotification({type: 'error', text: err.response ? err.response.data : err.message});
+            });
     }
 
     function onDeleteClick(event){
@@ -76,7 +85,9 @@ function Monitor() {
         const token = localStorage.getItem('token');
         deleteMonitor(id, token)
         .then(monitor => {history.go(0)})
-        .catch(err => console.error(err.response ? err.response.data : err.message));
+        .catch(err => {console.error(err.response ? err.response.data : err.message);
+        setNotification({type: 'error', text: err.response ? err.response.data : err.message});
+        });
     }
 
     function onModalSubmit(event){
@@ -129,6 +140,7 @@ function Monitor() {
                 <Footer/>
             </main>
             <MonitorModal data={editMonitor} onSubmit={onModalSubmit}/>
+            <Toast type={notification.type} text={notification.text} />
         </React.Fragment>
     )
 }

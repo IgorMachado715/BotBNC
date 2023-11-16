@@ -34,7 +34,7 @@ function BookRow(props) {
 
     }, [props.data]);
 
-    return(bookRow);
+    return bookRow;
 }
 
 export default BookRow;

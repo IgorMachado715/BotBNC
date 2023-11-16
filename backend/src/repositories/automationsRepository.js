@@ -1,11 +1,12 @@
 const automationModel = require('../models/automationModel');
+const actionModel = require('../models/actionModel');
 
 function getActiveAutomations() {
-    return automationModel.findAll({ where: { isActive: true } });
+    return automationModel.findAll({ where: { isActive: true }, include: actionModel });
 }
 
 function getAutomation(id) {
-    return automationModel.findByPk(id);
+    return automationModel.findByPk(id, {include: actionModel});
 }
 
 function getAutomations(page = 1) {
@@ -13,16 +14,17 @@ function getAutomations(page = 1) {
         where: {},
         order: [['isActive', 'DESC'], ['symbol', 'ASC'], ['name', 'ASC']],
         limit: 10,
-        offset: 10 * (page - 1)
+        offset: 10 * (page - 1),
+        include: actionModel
     })
 }
 
-function insertAutomation(newAutomation) {
-    return automationModel.create(newAutomation);
+function insertAutomation(newAutomation, transaction) {
+    return automationModel.create(newAutomation, {transaction});
 }
 
-function deleteAutomation(id) {
-    return automationModel.destroy({ where: { id } });
+function deleteAutomation(id, transaction) {
+    return automationModel.destroy({ where: { id }, transaction });
 }
 
 async function updateAutomation(id, newAutomation){
