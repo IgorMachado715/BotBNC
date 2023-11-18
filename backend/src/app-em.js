@@ -20,7 +20,7 @@ function startMiniTickerMonitor(broadcastLabel, logs) {
             delete mkt[1].eventTime;
             const converted = {};
             Object.entries(mkt[1]).map(prop => converted[prop[0]] = parseFloat(prop[1]));
-            const results = bot.updateMemory(mkt[0], indexKeys.MINI_TICKER, null, converted);
+            const results = await bot.updateMemory(mkt[0], indexKeys.MINI_TICKER, null, converted);
             if (results) results.map(r => WSS.broadcast({ notification: r }));
         })
 
@@ -30,8 +30,11 @@ function startMiniTickerMonitor(broadcastLabel, logs) {
         //simulação de book
         const books = Object.entries(markets).map(mkt => {
             const book = { symbol: mkt[0], bestAsk: mkt[1].close, bestBid: mkt[1].close };
-            const results = bot.updateMemory(mkt[0], indexKeys.BOOK, null, book);
-            if (results) results.map(r => WSS.broadcast({ notification: r }));
+            bot.updateMemory(mkt[0], indexKeys.BOOK, null, book)
+            .then(results => {
+                if (results) results.map(r => WSS.broadcast({ notification: r }));
+            })
+             
             return book;
         })
         if (WSS) WSS.broadcast({ book: books });
@@ -45,7 +48,7 @@ async function loadWallet() {
     const wallet = Object.entries(info).map(async (item) => {
         //enviar para o bot
 
-        const results = bot.updateMemory(item[0], indexKeys.WALLET, null, parseFloat(item[1].available));
+        const results = await bot.updateMemory(item[0], indexKeys.WALLET, null, parseFloat(item[1].available));
         if (results) results.map(r => WSS.broadcast({ notification: r }));
 
         return {
@@ -82,19 +85,21 @@ function processExecutionData(executionData, broadcastLabel) {
 
     if (order.status === 'REJECTED') order.obs = executionData.r;
 
-    setTimeout(() => {
-        ordersRepository.updateOrderByOrderId(order.orderId, order.clientOrderId, order)
-            .then(order => {
+    setTimeout(async () => {
+        try{
+        
+        const order = await ordersRepository.updateOrderByOrderId(order.orderId, order.clientOrderId, order)
                 //enviar para o bot
                 if (order) {
-                    const results = bot.updateMemory(order.symbol, indexKeys.LAST_ORDER, null, order);
+                    const results = await bot.updateMemory(order.symbol, indexKeys.LAST_ORDER, null, order);
                     if (results) results.map(r => WSS.broadcast({ notification: r }));
                     if (broadcastLabel & WSS) {
                         WSS.broadcast({ [broadcastLabel]: order });
                     }
                 }
-            })
-            .catch(err => console.error(err))
+        }catch(err){
+            console.error(err);
+        }
     }, 2000)
 
 }
@@ -160,7 +165,7 @@ function startChartMonitor(symbol, interval, indexes, broadcastLabel, logs) {
     if (!symbol) return new Error(`Não é possível iniciar o monitor Gráfico sem um símbolo!`);
     if (!exchange) return new Error(`Monitor de exchange não iniciado.`);
 
-    exchange.chartStream(symbol, interval || "1m", (ohlc) => {
+    exchange.chartStream(symbol, interval || "1m", async (ohlc) => {
 
         const lastCandle = {
             open: ohlc.open[ohlc.open.length - 1],
@@ -172,13 +177,13 @@ function startChartMonitor(symbol, interval, indexes, broadcastLabel, logs) {
         if (logs) console.log(lastCandle);
 
         //enviar para o bot
-        let results = bot.updateMemory(symbol, indexKeys.LAST_CANDLE, interval, lastCandle);
+        let results = await bot.updateMemory(symbol, indexKeys.LAST_CANDLE, interval, lastCandle);
         if (results) results.map(r => WSS.broadcast({ notification: r }));
 
         if (broadcastLabel && WSS) WSS.broadcast(lastCandle);
 
-        processChartData(symbol, indexes, interval, ohlc, logs);
-        //results.flat().map((r) => sendMessage({ notification: r }));
+        results = await processChartData(symbol, indexes, interval, ohlc, logs);
+        if (results) results.map((r) => WSS.broadcast({ notification: r }));
     
 
     })

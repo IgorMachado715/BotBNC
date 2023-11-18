@@ -17,9 +17,9 @@ function searchSymbols(search, onlyFavorites = false, page = 1) {
         if (search.length < 6)
             options.where = { symbol: { [Sequelize.Op.like]: `%${search}%` } };
         else
-            options.where = {symbol: search};
+            options.where = { symbol: search };
     }
-    if(onlyFavorites) options.where.isFavorite = true;
+    if (onlyFavorites) options.where.isFavorite = true;
 
     return symbolModel.findAndCountAll(options);
 }
@@ -48,6 +48,12 @@ async function updateSymbol(symbol, newSymbol) {
 
     if (newSymbol.quote && newSymbol.quote !== currentSymbol.quote)
         currentSymbol.quote = newSymbol.quote;
+
+    if (newSymbol.stepSize && newSymbol.stepSize !== currentSymbol.stepSize)
+        currentSymbol.stepSize = newSymbol.stepSize;
+
+    if (newSymbol.tickSize && newSymbol.tickSize !== currentSymbol.tickSize)
+        currentSymbol.tickSize = newSymbol.tickSize;
 
     if (newSymbol.isFavorite !== null && newSymbol.isFavorite !== undefined
         && newSymbol.isFavorite !== currentSymbol.isFavorite)

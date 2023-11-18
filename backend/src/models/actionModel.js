@@ -1,6 +1,8 @@
 const Sequelize = require('sequelize');
 const database = require('../db');
 
+const orderTemplateModel = require('./orderTemplateModel');
+
 const actionModel = database.define('action', {
     id: {
         type: Sequelize.INTEGER,
@@ -16,8 +18,13 @@ const actionModel = database.define('action', {
         type: Sequelize.STRING,
         allowNull: false
     },
+    orderTemplateId: Sequelize.INTEGER,
     createdAt: Sequelize.DATE,
     updatedAt: Sequelize.DATE
+})
+
+actionModel.belongsTo(orderTemplateModel,   {
+    foreignKey: 'orderTemplateId'
 })
 
 module.exports = actionModel;

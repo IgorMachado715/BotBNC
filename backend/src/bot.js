@@ -11,6 +11,8 @@ let LOCK_MEMORY = false;
 
 let LOCK_BRAIN = false;
 
+const INTERVAL = parseInt(process.env.AUTOMATION_INTERNAL || 0);
+
 const LOGS = process.env.BOT_LOGS === 'true';
 
 function init(automations) {
@@ -43,7 +45,7 @@ function updateBrainIndex(index, automationId) {
     BRAIN_INDEX[index].push(automationId);
 }
 
-function updateMemory(symbol, index, interval, value, executeAutomations = true) {
+async function updateMemory(symbol, index, interval, value, executeAutomations = true) {
 
     if (LOCK_MEMORY) return false;
 
@@ -68,17 +70,23 @@ function updateMemory(symbol, index, interval, value, executeAutomations = true)
         const automations = findAutomations(memoryKey);
         if (automations && automations.length > 0 && !LOCK_BRAIN) {
             LOCK_BRAIN = true;
-            let results = automations.map(auto => {
-                //testes das automações
-                return evalDecision(auto);
-            })
 
-                .flat();
+            const promises = automations.map((auto) => {
+                return evalDecision(auto);
+            });
+            let results = await Promise.all(promises);
+            //let results = automations.map(async (auto) => {
+                //testes das automações
+                //const internalResult = await evalDecision(auto);
+               // console.log(internalResult);
+              //  return internalResult;
+          //  }).flat();
 
             //[[a], [b]]
             //[a,b]
 
-            results = results.filter(r => r);
+            results = results.flat().filter(r => r);
+            console.log(results);
 
             if (!results || !results.length)
                 return false;
@@ -87,7 +95,10 @@ function updateMemory(symbol, index, interval, value, executeAutomations = true)
         }
     }
     finally {
-        LOCK_BRAIN = false;
+        setTimeout(() => {
+            LOCK_BRAIN = false;
+        }, INTERVAL)
+        
     }
 }
 
@@ -105,11 +116,23 @@ function invertConditions(conditions) {
         .join(' && ');
 }
 
+async function sendEmail(settings, automation){
+   await require('./utils/email')(settings, `${automation.name} foi disparada: ${automation.conditions}`);
+   if(automation.logs) console.log('Email enviado!');
+   return {type: 'succes', text: `Email enviado da automação ${automation.name}.`};
+}
+
+async function sendSms(settings, automation){
+    await require('./utils/sms')(settings, `${automation.name} foi disparada.`);
+    if(automation.logs) console.log('SMS enviado!');
+    return {type: 'succes', text: `SMS enviado da automação ${automation.name}.`};
+}
+
 function doAction(settings, action, automation){
     try {
         switch(action.type){
-            case actionsTypes.ALERT_EMAIL: return{type: 'succes', text: 'Email enviado'};
-            case actionsTypes.ALERT_SMS: return{type: 'succes', text: 'SMS enviado'};
+            case actionsTypes.ALERT_EMAIL: return sendEmail(settings, automation);
+            case actionsTypes.ALERT_SMS: return sendSms(settings, automation);
             case actionsTypes.ORDER: return{type: 'succes', text: 'Order posicionada'};
         }
     }
@@ -123,7 +146,7 @@ function doAction(settings, action, automation){
 }
 
 async function evalDecision(automation) {
-    const indexes = automation.indexes.split(',');
+    const indexes = automation.indexes ? automation.indexes.split(',') : [];
     const isChecked = indexes.every(ix => MEMORY[ix] !== null && MEMORY[ix] !== undefined);
     if (!isChecked) return false;
 
@@ -141,18 +164,16 @@ async function evalDecision(automation) {
     }
 
     const settings = await getDefaultSettings(); 
-    const results = automation.actions.map(action => {
+    let results = automation.actions.map(action => {
         return doAction(settings, action, automation);
-        console.log('AÇÕES EXECUTADAS');
-
     })
+
+    results = await Promise.all(results);
 
     if(automation.logs)  console.log(`Automação ${automation.name} disparada!`);
 
     return results;
-    //para cada ação da automação, executa a ação com as settings
-
-   
+    //para cada ação da automação, executa a ação com as settings   
     //executar ações
 }
 

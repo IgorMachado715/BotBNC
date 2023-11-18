@@ -1,12 +1,11 @@
 const automationModel = require('../models/automationModel');
-const actionModel = require('../models/actionModel');
 
 function getActiveAutomations() {
-    return automationModel.findAll({ where: { isActive: true }, include: actionModel });
+    return automationModel.findAll({ where: { isActive: true }, include: [{all: true, nested: true}] });
 }
 
 function getAutomation(id) {
-    return automationModel.findByPk(id, {include: actionModel});
+    return automationModel.findByPk(id, {include: [{all: true, nested: true}]});
 }
 
 function getAutomations(page = 1) {
@@ -15,7 +14,7 @@ function getAutomations(page = 1) {
         order: [['isActive', 'DESC'], ['symbol', 'ASC'], ['name', 'ASC']],
         limit: 10,
         offset: 10 * (page - 1),
-        include: actionModel
+        include: [{all: true, nested: true}]
     })
 }
 

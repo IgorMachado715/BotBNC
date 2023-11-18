@@ -35,22 +35,37 @@ async function getDefaultSettings() {
 async function updateSettings(id, newSettings) {
     const currentSettings = await getSettings(id);
 
-    if (newSettings.email !== currentSettings.email)
+    if (newSettings.email && newSettings.email !== currentSettings.email)
         currentSettings.email = newSettings.email;
+
+    if (newSettings.phone && newSettings.phone !== currentSettings.phone)
+        currentSettings.phone = newSettings.phone;
 
     if (newSettings.password)
         currentSettings.password = bcrypt.hashSync(newSettings.password);
 
-    if (newSettings.apiUrl !== currentSettings.apiUrl)
+    if (newSettings.apiUrl && newSettings.apiUrl !== currentSettings.apiUrl)
         currentSettings.apiUrl = newSettings.apiUrl;
 
-    if (newSettings.streamUrl !== currentSettings.streamUrl)
+    if (newSettings.streamUrl && newSettings.streamUrl !== currentSettings.streamUrl)
         currentSettings.streamUrl = newSettings.streamUrl;
 
-    if (newSettings.accessKey !== currentSettings.accessKey)
+    if (newSettings.accessKey && newSettings.accessKey !== currentSettings.accessKey)
         currentSettings.accessKey = newSettings.accessKey;
 
-    if (newSettings.secretKey){
+    if (newSettings.sendGridKey && newSettings.sendGridKey !== currentSettings.sendGridKey)
+        currentSettings.sendGridKey = newSettings.sendGridKey;
+
+    if (newSettings.twilioSid && newSettings.twilioSid !== currentSettings.twilioSid)
+        currentSettings.twilioSid = newSettings.twilioSid;
+
+    if (newSettings.twilioToken && newSettings.twilioToken !== currentSettings.twilioToken)
+        currentSettings.twilioToken = newSettings.twilioToken;
+
+    if (newSettings.twilioPhone && newSettings.twilioPhone !== currentSettings.twilioPhone)
+        currentSettings.twilioPhone = newSettings.twilioPhone;
+
+    if (newSettings.secretKey) {
         currentSettings.secretKey = crypto.encrypt(newSettings.secretKey);
         clearSettingsCache(id);
     }
