@@ -1,2 +1,2 @@
-# Beholder
+# Bot Binance
 Bot binance
